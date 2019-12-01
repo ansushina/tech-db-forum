@@ -22,4 +22,9 @@ To run the server, follow these simple steps:
 ```
 go run main.go
 ```
+### Running Docker 
+To run docker, follow this steps:
+```
+docker build -t tech-db -f dockerfile .
+```
 

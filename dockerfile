@@ -20,8 +20,8 @@ RUN /etc/init.d/postgresql start &&\
 
 RUN cat database/create.sql
 
-ENV GOVERSION 1.13.1
 USER root
+ENV GOVERSION 1.13.1
 RUN curl -s -O https://dl.google.com/go/go$GOVERSION.linux-amd64.tar.gz
 RUN tar -xzf go$GOVERSION.linux-amd64.tar.gz -C /usr/local
 RUN chown -R root:root /usr/local/go

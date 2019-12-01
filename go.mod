@@ -1,4 +1,4 @@
-module github.com/technopark/forum
+module github.com/ansushina/tech-db-forum
 
 go 1.13
 

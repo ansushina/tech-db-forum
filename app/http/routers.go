@@ -14,6 +14,8 @@ import (
 	"github.com/gorilla/mux"
 	"net/http"
 	"strings"
+	"github.com/ansushina/tech-db-forum/app/http/handlers"
+	"github.com/ansushina/tech-db-forum/pkg"
 )
 
 type Route struct {
@@ -31,7 +33,7 @@ func NewRouter() *mux.Router {
 		var handler http.Handler
 		handler = route.HandlerFunc
 
-		handler = Logger(handler, route.Name)
+		handler = pkg.Logger(handler, route.Name)
 
 		router.
 			Methods(route.Method).
@@ -59,118 +61,118 @@ var routes = Routes{
 		"Clear",
 		strings.ToUpper("Post"),
 		"/api/service/clear",
-		Clear,
+		handlers.Clear,
 	},
 
 	Route{
 		"ForumCreate",
 		strings.ToUpper("Post"),
 		"/api/forum/create",
-		ForumCreate,
+		handlers.ForumCreate,
 	},
 
 	Route{
 		"ForumGetOne",
 		strings.ToUpper("Get"),
 		"/api/forum/{slug}/details",
-		ForumGetOne,
+		handlers.ForumGetOne,
 	},
 
 	Route{
 		"ForumGetThreads",
 		strings.ToUpper("Get"),
 		"/api/forum/{slug}/threads",
-		ForumGetThreads,
+		handlers.ForumGetThreads,
 	},
 
 	Route{
 		"ForumGetUsers",
 		strings.ToUpper("Get"),
 		"/api/forum/{slug}/users",
-		ForumGetUsers,
+		handlers.ForumGetUsers,
 	},
 
 	Route{
 		"PostGetOne",
 		strings.ToUpper("Get"),
 		"/api/post/{id}/details",
-		PostGetOne,
+		handlers.PostGetOne,
 	},
 
 	Route{
 		"PostUpdate",
 		strings.ToUpper("Post"),
 		"/api/post/{id}/details",
-		PostUpdate,
+		handlers.PostUpdate,
 	},
 
 	Route{
 		"PostsCreate",
 		strings.ToUpper("Post"),
 		"/api/thread/{slug_or_id}/create",
-		PostsCreate,
+		handlers.PostsCreate,
 	},
 
 	Route{
 		"Status",
 		strings.ToUpper("Get"),
 		"/api/service/status",
-		Status,
+		handlers.Status,
 	},
 
 	Route{
 		"ThreadCreate",
 		strings.ToUpper("Post"),
 		"/api/forum/{slug}/create",
-		ThreadCreate,
+		handlers.ThreadCreate,
 	},
 
 	Route{
 		"ThreadGetOne",
 		strings.ToUpper("Get"),
 		"/api/thread/{slug_or_id}/details",
-		ThreadGetOne,
+		handlers.ThreadGetOne,
 	},
 
 	Route{
 		"ThreadGetPosts",
 		strings.ToUpper("Get"),
 		"/api/thread/{slug_or_id}/posts",
-		ThreadGetPosts,
+		handlers.ThreadGetPosts,
 	},
 
 	Route{
 		"ThreadUpdate",
 		strings.ToUpper("Post"),
 		"/api/thread/{slug_or_id}/details",
-		ThreadUpdate,
+		handlers.ThreadUpdate,
 	},
 
 	Route{
 		"ThreadVote",
 		strings.ToUpper("Post"),
 		"/api/thread/{slug_or_id}/vote",
-		ThreadVote,
+		handlers.ThreadVote,
 	},
 
 	Route{
 		"UserCreate",
 		strings.ToUpper("Post"),
 		"/api/user/{nickname}/create",
-		UserCreate,
+		handlers.UserCreate,
 	},
 
 	Route{
 		"UserGetOne",
 		strings.ToUpper("Get"),
 		"/api/user/{nickname}/profile",
-		UserGetOne,
+		handlers.UserGetOne,
 	},
 
 	Route{
 		"UserUpdate",
 		strings.ToUpper("Post"),
 		"/api/user/{nickname}/profile",
-		UserUpdate,
+		handlers.UserUpdate,
 	},
 }

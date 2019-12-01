@@ -9,8 +9,10 @@ RUN apt-get update && \
 USER root 
 
 RUN git clone https://github.com/ansushina/tech-db-forum.git
+
 WORKDIR tech-db-forum
 
+RUN git pull
 USER postgres
 RUN /etc/init.d/postgresql start &&\
     psql --command "CREATE USER docker WITH SUPERUSER PASSWORD 'docker';" &&\

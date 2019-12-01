@@ -10,7 +10,7 @@ CREATE TABLE users (
   "nickname" TEXT UNIQUE PRIMARY KEY,
   "fullname" TEXT NOT NULL,
   "about"    TEXT,
-  "email"    TEXT UNIQUE NOT NULL,
+  "email"    TEXT UNIQUE NOT NULL
 );
 
 CREATE TABLE forums (
@@ -18,7 +18,7 @@ CREATE TABLE forums (
   "user"    TEXT    NOT NULL REFERENCES users ("nickname"),
   "slug"    TEXT    UNIQUE NOT NULL,
   "posts"   BIGINT  DEFAULT 0,
-  "threads" INTEGER DEFAULT 0,
+  "threads" INTEGER DEFAULT 0
 );
 
 CREATE TABLE threads (
@@ -46,5 +46,5 @@ CREATE TABLE posts (
 CREATE TABLE votes (
   "thread"   INT NOT NULL REFERENCES threads("id"),
   "voice"    INTEGER NOT NULL,
-  "nickname" CITEXT   NOT NULL
+  "nickname" TEXT   NOT NULL
 );

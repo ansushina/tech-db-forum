@@ -26,7 +26,7 @@ RUN /etc/init.d/postgresql start &&\
     /etc/init.d/postgresql stop
 
 USER root
-ARG CACHE_DATE=2017-01-10
+ARG CACHE_DATE=2016-01-10
 RUN git clone https://github.com/ansushina/tech-db-forum.git
 
 WORKDIR tech-db-forum
@@ -47,3 +47,5 @@ RUN go get
 RUN go build main.go
 CMD ["/tech-db-forum/main"]
 EXPOSE 5000
+
+CMD service postgresql start && ./main

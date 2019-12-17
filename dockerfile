@@ -19,24 +19,28 @@ RUN GO11MODULE=on
 
 
 USER postgres
+ENV PGVERSION 11
 RUN /etc/init.d/postgresql start &&\
     psql --command "CREATE USER docker WITH SUPERUSER PASSWORD 'docker';" &&\
     createdb -O docker docker &&\
     /etc/init.d/postgresql stop
 
-
 USER root
 RUN git clone https://github.com/ansushina/tech-db-forum.git
 
 WORKDIR tech-db-forum
-ARG CACHE_DATE=2016-01-10
+ARG CACHE_DATE=2015-01-10
 RUN git pull
 
 USER postgres
 RUN /etc/init.d/postgresql start &&\
     psql docker -a -f  database/create.sql &&\
     /etc/init.d/postgresql stop
-
+RUN echo "local all all md5" > /etc/postgresql/$PGVERSION/main/pg_hba.conf &&\
+    echo "host all all 0.0.0.0/0 md5" >> /etc/postgresql/$PGVERSION/main/pg_hba.conf
+RUN cat database/postgresql.conf >> /etc/postgresql/$PGVERSION/main/postgresql.conf
+VOLUME  ["/etc/postgresql", "/var/log/postgresql", "/var/lib/postgresql"]
+EXPOSE 5432
 USER root
 
 RUN go get

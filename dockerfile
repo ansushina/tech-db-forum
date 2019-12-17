@@ -26,10 +26,10 @@ RUN /etc/init.d/postgresql start &&\
     /etc/init.d/postgresql stop
 
 USER root
+ARG CACHE_DATE=2017-01-10
 RUN git clone https://github.com/ansushina/tech-db-forum.git
 
 WORKDIR tech-db-forum
-ARG CACHE_DATE=2015-01-10
 RUN git pull
 
 USER postgres

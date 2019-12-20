@@ -9,6 +9,7 @@ type DataBase struct {
 	DBPool *pgx.ConnPool
 }
 
+var DB DataBase
 
 func (db *DataBase)createConn() (err error) {
 	conConfig := pgx.ConnConfig {

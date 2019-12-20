@@ -2,12 +2,12 @@ package dbhandlers
 
 import (
 	"github.com/jackc/pgx"
-	"../models"
+	"github.com/ansushina/tech-db-forum/app/models"
 )
 
 
 func CreateForum(forum *models.forum) (error) {
-	err := DB.Pool.QueryRow(
+	err := DB.DBPool.QueryRow(
 		`
 			INSERT INTO forums (slug, title, user)
 			VALUES ($1, $2, $3) 

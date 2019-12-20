@@ -3,6 +3,7 @@ package dbhandlers
 import (
 	"errors"
 	"github.com/ansushina/tech-db-forum/app/models"
+	"github.com/jackc/pgx"
 )
 
 var (
@@ -39,7 +40,7 @@ func CreateForum(forum models.Forum) (models.Forum, error) {
 
 func GetForumBySlug(slug string) (models.Forum, error) {
 	var f models.Forum
-	err := DB.DBPool.QueryRow(`SELECT * FROM forums WHERE slug = $1`, slug).Scan(
+	err := DB.DBPool.QueryRow(`SELECT slug, title, "user", posts, threads FROM forums WHERE slug = $1`, slug).Scan(
 		&f.Slug,
 		&f.Title,
 		&f.User,
@@ -77,7 +78,7 @@ func CreateForumThread(t models.Thread) (models.Thread, error) {
 	case pgxOK:
 		return t, nil
 	case pgxErrUnique:
-		thread, _ := GetTreadBySlug(t.Slug)
+		thread, _ := GetThreadBySlug(t.Slug)
 		return thread, ForumIsExist
 	case pgxErrNotNull:
 		return models.Thread{}, UserNotFound
@@ -86,8 +87,55 @@ func CreateForumThread(t models.Thread) (models.Thread, error) {
 	}
 }
 
-func GetForumThreads() {
+func GetForumThreads(slug, limit, since string, desc bool) (models.Threads, error) {
 
+	queryString := " SELECT author, created, forum, id, message, slug, title, votes FROM threads "
+	queryString += " where forum = " + slug + " "
+
+	if since != "" {
+		queryString += " AND t.created <= TIMESTAMPTZ '" + since + "' "
+	}
+	queryString += " order by created "
+	if desc {
+		queryString += " DESC "
+	}
+
+	if limit != "" {
+		queryString += " limit " + limit
+	}
+
+	var rows *pgx.Rows
+	var err error
+	rows, err = DB.DBPool.Query(queryString)
+
+	if err != nil {
+		return models.Threads{}, err
+	}
+
+	threads := models.Threads{}
+
+	for rows.Next() {
+		t := models.Thread{}
+		err = rows.Scan(
+			&t.Author,
+			&t.Created,
+			&t.Forum,
+			&t.Id,
+			&t.Message,
+			&t.Slug,
+			&t.Title,
+			&t.Votes,
+		)
+		threads = append(threads, &t)
+	}
+
+	if len(threads) == 0 {
+		_, err := GetForumBySlug(slug)
+		if err != nil {
+			return models.Threads{}, ForumNotFound
+		}
+	}
+	return threads, nil
 }
 
 func GetForumUsers() {

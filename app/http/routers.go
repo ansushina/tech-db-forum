@@ -15,7 +15,7 @@ import (
 	"net/http"
 	"strings"
 	"github.com/ansushina/tech-db-forum/app/http/handlers"
-	"github.com/ansushina/tech-db-forum/pkg"
+	"github.com/ansushina/tech-db-forum/pkg/logger"
 )
 
 type Route struct {
@@ -33,7 +33,7 @@ func NewRouter() *mux.Router {
 		var handler http.Handler
 		handler = route.HandlerFunc
 
-		handler = pkg.Logger(handler, route.Name)
+		handler = logger.Logger(handler, route.Name)
 
 		router.
 			Methods(route.Method).

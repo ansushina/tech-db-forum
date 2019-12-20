@@ -1,9 +1,17 @@
 package dbhandlers
 
 import (
-	"io/ioutil"
-
+	"errors"
 	"github.com/jackc/pgx"
+	"io/ioutil"
+)
+
+const (
+	pgxOK            = ""
+	pgxErrNotNull    = "23502"
+	pgxErrForeignKey = "23503" // может возникнуть при добавлении дубликата
+	pgxErrUnique     = "23505"
+	pgxnoRows        = "no rows in result set"
 )
 
 type DataBase struct {
@@ -12,7 +20,7 @@ type DataBase struct {
 
 var DB DataBase
 
-func (db *DataBase) createConn() (err error) {
+func createConn() (err error) {
 	conConfig := pgx.ConnConfig{
 		Database: "zxc",
 		User:     "docker",
@@ -28,14 +36,14 @@ func (db *DataBase) createConn() (err error) {
 	if err != nil {
 		return err
 	}
-	db.DBPool = con
+	DB.DBPool = con
 
 	content, err := ioutil.ReadFile("./p")
 	if err != nil {
 		return err
 	}
 
-	tx, err := db.DBPool.Begin()
+	tx, err := DB.DBPool.Begin()
 	if err != nil {
 		return err
 	}
@@ -50,21 +58,21 @@ func (db *DataBase) createConn() (err error) {
 
 func (db *DataBase) Close() error {
 	if db.DBPool == nil {
-		return errors.new("no connection")
+		return errors.New("no connection")
 	}
 	db.DBPool.Close()
 	return nil
 }
 
-func (db *DataBase) Begin() (tx *pgx.Tx, err error) {
-	if db.DBPool == nil {
-		return tx, errors.new("no connection")
+func Begin() (tx *pgx.Tx, err error) {
+	if DB.DBPool == nil {
+		return tx, errors.New("no connection")
 	}
 
-	return db.DBPool.Begin()
+	return DB.DBPool.Begin()
 }
 
-func (db *DataBase) QueryRow(query string, args ...interface{}) (row *pgx.Row, err error) {
+func QueryRow(query string, args ...interface{}) (row *pgx.Row, err error) {
 	tx, err := Begin()
 	if err != nil {
 		return
@@ -76,7 +84,7 @@ func (db *DataBase) QueryRow(query string, args ...interface{}) (row *pgx.Row, e
 	return row, tx.Commit()
 }
 
-func (db *DataBase) Query(query string, args ...interface{}) (rows *pgx.Rows, err error) {
+func Query(query string, args ...interface{}) (rows *pgx.Rows, err error) {
 	tx, err := Begin()
 	if err != nil {
 		return
@@ -91,7 +99,7 @@ func (db *DataBase) Query(query string, args ...interface{}) (rows *pgx.Rows, er
 	return rows, tx.Commit()
 }
 
-func (db *DataBase) Exec(query string, args ...interface{}) (tag pgx.CommandTag, err error) {
+func Exec(query string, args ...interface{}) (tag pgx.CommandTag, err error) {
 	tx, err := Begin()
 	if err != nil {
 		return
@@ -104,4 +112,12 @@ func (db *DataBase) Exec(query string, args ...interface{}) (tag pgx.CommandTag,
 	}
 
 	return tag, tx.Commit()
+}
+
+func ErrorCode(err error) string {
+	pgerr, ok := err.(pgx.PgError)
+	if !ok {
+		return pgxOK
+	}
+	return pgerr.Code
 }

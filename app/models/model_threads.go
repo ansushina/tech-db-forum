@@ -9,5 +9,4 @@
 
 package models
 
-type Threads struct {
-}
+type Threads []*Thread

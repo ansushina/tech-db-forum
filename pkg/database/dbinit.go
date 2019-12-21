@@ -1,4 +1,4 @@
-package dbhandlers
+package database
 
 import (
 	"errors"

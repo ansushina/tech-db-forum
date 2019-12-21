@@ -9,5 +9,4 @@
 
 package models
 
-type Users struct {
-}
+type Users []*User

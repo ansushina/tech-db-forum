@@ -57,7 +57,7 @@ func ForumCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = database.CreateForum(f)
+	_, err = database.CreateForum(f)
 	if err != nil {
 		WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return

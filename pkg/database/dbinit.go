@@ -53,7 +53,7 @@ func CreateConn() (err error) {
 		return err
 	}
 	tx.Commit()
-	return
+	return nil
 }
 
 func (db *DataBase) Close() error {

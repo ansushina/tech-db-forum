@@ -25,11 +25,11 @@ import (
 )
 
 func main() {
+	log.Printf("Server started")
 	err := database.CreateConn()
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("Server started")
 
 	router := sw.NewRouter()
 

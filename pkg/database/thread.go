@@ -33,7 +33,9 @@ func GetThreadBySlug(slug string) (models.Thread, error) {
 func GetThreadById(id int) (models.Thread, error) {
 	var t models.Thread
 
-	err := DB.DBPool.QueryRow(`SELECT id, votes, created, slug, title, author, forum, message FROM threads WHERE id = $1`, id).Scan(
+	err := DB.DBPool.QueryRow(`
+	SELECT id, votes, created, slug, title, author, forum, message 
+	FROM threads WHERE id = $1`, id).Scan(
 		&t.Id,
 		&t.Votes,
 		&t.Created,
@@ -49,3 +51,16 @@ func GetThreadById(id int) (models.Thread, error) {
 
 	return t, nil
 }
+
+func CreateThreadPost() {
+
+}
+
+func UpdateThreadBySlugorId(param string) {
+
+}
+
+func GetThreadPosts(param string, slug, limit, since string, desc bool) {
+}
+
+func VoteForThread(param string) {}

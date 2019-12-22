@@ -21,9 +21,14 @@ import (
 	//    sw "github.com/myname/myrepo/go"
 	//
 	sw "github.com/ansushina/tech-db-forum/app/http"
+	"github.com/ansushina/tech-db-forum/pkg/database"
 )
 
 func main() {
+	err := database.CreateConn()
+	if err != nil {
+		log.Fatal(err)
+	}
 	log.Printf("Server started")
 
 	router := sw.NewRouter()

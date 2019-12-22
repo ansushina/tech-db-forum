@@ -10,7 +10,6 @@ var (
 	ForumIsExist          = errors.New("Forum is already exist")
 	ForumNotFound         = errors.New("Forum not found")
 	ForumOrAuthorNotFound = errors.New("Forum or Author not found")
-	UserNotFound          = errors.New("User not found")
 )
 
 func CreateForum(forum models.Forum) (models.Forum, error) {

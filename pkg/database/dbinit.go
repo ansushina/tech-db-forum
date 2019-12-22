@@ -20,7 +20,7 @@ type DataBase struct {
 
 var DB DataBase
 
-func createConn() (err error) {
+func CreateConn() (err error) {
 	conConfig := pgx.ConnConfig{
 		Database: "zxc",
 		User:     "docker",

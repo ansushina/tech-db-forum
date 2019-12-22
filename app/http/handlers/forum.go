@@ -42,14 +42,13 @@ func ForumCreate(w http.ResponseWriter, r *http.Request) {
 	body, _ := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
 
-	//_ = json.Unmarshal(body, &f)
 	_ = f.UnmarshalJSON(body)
 
-	/*_, err := database.GetUserByNickname(f.User)
+	_, err := database.GetUserInfo(f.User)
 	if err != nil {
 		WriteErrorResponse(w, http.StatusNotFound, "Can't find user with nickname "+f.User)
 		return
-	}*/
+	}
 
 	existingForum, err := database.GetForumBySlug(f.Slug)
 	if err == nil {

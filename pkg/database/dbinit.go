@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/jackc/pgx"
 	"io/ioutil"
+	"log"
 )
 
 const (
@@ -22,7 +23,7 @@ var DB DataBase
 
 func CreateConn() (err error) {
 	conConfig := pgx.ConnConfig{
-		Database: "zxc",
+		Database: "docker",
 		User:     "docker",
 		Password: "docker",
 	}
@@ -37,8 +38,9 @@ func CreateConn() (err error) {
 		return err
 	}
 	DB.DBPool = con
+	log.Printf("Connection created")
 
-	content, err := ioutil.ReadFile("./p")
+	content, err := ioutil.ReadFile("./database/create.sql")
 	if err != nil {
 		return err
 	}
@@ -53,6 +55,8 @@ func CreateConn() (err error) {
 		return err
 	}
 	tx.Commit()
+	log.Printf("tables created")
+
 	return nil
 }
 

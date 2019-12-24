@@ -16,3 +16,82 @@ var (
 	_ *jwriter.Writer
 	_ easyjson.Marshaler
 )
+
+func easyjsonCce3e79bDecodeGithubComAnsushinaTechDbForumAppModels(in *jlexer.Lexer, out *Threads) {
+	isTopLevel := in.IsStart()
+	if in.IsNull() {
+		in.Skip()
+		*out = nil
+	} else {
+		in.Delim('[')
+		if *out == nil {
+			if !in.IsDelim(']') {
+				*out = make(Threads, 0, 8)
+			} else {
+				*out = Threads{}
+			}
+		} else {
+			*out = (*out)[:0]
+		}
+		for !in.IsDelim(']') {
+			var v1 *Thread
+			if in.IsNull() {
+				in.Skip()
+				v1 = nil
+			} else {
+				if v1 == nil {
+					v1 = new(Thread)
+				}
+				(*v1).UnmarshalEasyJSON(in)
+			}
+			*out = append(*out, v1)
+			in.WantComma()
+		}
+		in.Delim(']')
+	}
+	if isTopLevel {
+		in.Consumed()
+	}
+}
+func easyjsonCce3e79bEncodeGithubComAnsushinaTechDbForumAppModels(out *jwriter.Writer, in Threads) {
+	if in == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
+		out.RawString("null")
+	} else {
+		out.RawByte('[')
+		for v2, v3 := range in {
+			if v2 > 0 {
+				out.RawByte(',')
+			}
+			if v3 == nil {
+				out.RawString("null")
+			} else {
+				(*v3).MarshalEasyJSON(out)
+			}
+		}
+		out.RawByte(']')
+	}
+}
+
+// MarshalJSON supports json.Marshaler interface
+func (v Threads) MarshalJSON() ([]byte, error) {
+	w := jwriter.Writer{}
+	easyjsonCce3e79bEncodeGithubComAnsushinaTechDbForumAppModels(&w, v)
+	return w.Buffer.BuildBytes(), w.Error
+}
+
+// MarshalEasyJSON supports easyjson.Marshaler interface
+func (v Threads) MarshalEasyJSON(w *jwriter.Writer) {
+	easyjsonCce3e79bEncodeGithubComAnsushinaTechDbForumAppModels(w, v)
+}
+
+// UnmarshalJSON supports json.Unmarshaler interface
+func (v *Threads) UnmarshalJSON(data []byte) error {
+	r := jlexer.Lexer{Data: data}
+	easyjsonCce3e79bDecodeGithubComAnsushinaTechDbForumAppModels(&r, v)
+	return r.Error()
+}
+
+// UnmarshalEasyJSON supports easyjson.Unmarshaler interface
+func (v *Threads) UnmarshalEasyJSON(l *jlexer.Lexer) {
+	easyjsonCce3e79bDecodeGithubComAnsushinaTechDbForumAppModels(l, v)
+}

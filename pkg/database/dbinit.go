@@ -2,9 +2,11 @@ package database
 
 import (
 	"errors"
-	"github.com/jackc/pgx"
 	"io/ioutil"
 	"log"
+	"strconv"
+
+	"github.com/jackc/pgx"
 )
 
 const (
@@ -124,4 +126,11 @@ func ErrorCode(err error) string {
 		return pgxOK
 	}
 	return pgerr.Code
+}
+
+func isNumber(s string) bool {
+	if _, err := strconv.Atoi(s); err == nil {
+		return true
+	}
+	return false
 }

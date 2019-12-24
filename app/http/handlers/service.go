@@ -1,18 +1,27 @@
 package handlers
 
 import (
+	"github.com/ansushina/tech-db-forum/pkg/database"
 	"net/http"
 )
 
 func Clear(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	w.WriteHeader(http.StatusOK)
+	err := database.ClearAll()
+	if err != nil {
+		WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	WriteResponse(w, http.StatusOK, nil)
+
 }
-
-
 
 func Status(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	w.WriteHeader(http.StatusOK)
-}
+	res, err := database.DatabaseStatus()
+	if err != nil {
+		WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
 
+	WriteResponse(w, http.StatusOK, res)
+}

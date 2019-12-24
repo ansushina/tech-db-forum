@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/ansushina/tech-db-forum/app/models"
+	"github.com/jackc/pgx"
 )
 
 var (
@@ -67,4 +68,51 @@ func UpdateUser(u models.User) (models.User, error) {
 		return models.User{}, UserNotFound
 	}
 	return u, nil
+}
+
+func GetForumUsers(slug, limit, since string, desc bool) (models.Users, error) {
+	queryString := " SELECT nickname, fullname, about, email FROM users "
+	queryString += " where forum = " + slug + " "
+
+	if since != "" {
+		queryString += " AND t.created <= TIMESTAMPTZ '" + since + "' "
+	}
+	queryString += " order by created "
+	if desc {
+		queryString += " DESC "
+	}
+
+	if limit != "" {
+		queryString += " limit " + limit
+	}
+
+	var rows *pgx.Rows
+	var err error
+	rows, err = DB.DBPool.Query(queryString)
+
+	if err != nil {
+		return models.Users{}, err
+	}
+
+	users := models.Users{}
+
+	for rows.Next() {
+		u := models.User{}
+		err = rows.Scan(
+			&u.Nickname,
+			&u.Fullname,
+			&u.About,
+			&u.Email,
+		)
+		users = append(users, &u)
+	}
+
+	if len(users) == 0 {
+		_, err := GetForumBySlug(slug)
+		if err != nil {
+			return models.Users{}, ForumNotFound
+		}
+	}
+	return users, nil
+
 }

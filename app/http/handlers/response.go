@@ -35,6 +35,10 @@ func WriteResponse(w http.ResponseWriter, code int, body interface{ MarshalJSON(
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(code)
 
+	if body == nil {
+		return
+	}
+
 	marshalBody, err := body.MarshalJSON()
 	if err != nil {
 		fmt.Println(err)

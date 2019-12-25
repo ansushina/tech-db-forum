@@ -18,13 +18,28 @@ func ThreadCreate(w http.ResponseWriter, r *http.Request) {
 	_ = t.UnmarshalJSON(body)
 	slug, _ := checkVar("slug", r)
 
+	_, e := database.GetForumBySlug(slug)
+	if e == database.ForumNotFound {
+		WriteErrorResponse(w, http.StatusNotFound, "Can't find forum with slug"+slug)
+		return
+	} else if e != nil {
+		WriteErrorResponse(w, http.StatusInternalServerError, e.Error())
+		return
+	}
+
+	_, err := database.GetUserInfo(t.Author)
+	if err != nil {
+		WriteErrorResponse(w, http.StatusNotFound, "Can't find user with nickname "+t.Author)
+		return
+	}
+
 	t.Forum = slug
 
 	res, err := database.CreateForumThread(t)
 
 	switch err {
 	case nil:
-		WriteResponse(w, http.StatusOK, res)
+		WriteResponse(w, http.StatusCreated, res)
 	case database.ThreadNotFound:
 		{
 			WriteErrorResponse(w, http.StatusNotFound, "Can't find thread with slug "+slug)
@@ -99,8 +114,6 @@ func ThreadUpdate(w http.ResponseWriter, r *http.Request) {
 
 	_ = t.UnmarshalJSON(body)
 	slug, _ := checkVar("slug", r)
-
-	t.Forum = slug
 
 	res, err := database.UpdateThreadBySlugorId(slug, t)
 

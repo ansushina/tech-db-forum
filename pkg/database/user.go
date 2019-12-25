@@ -57,15 +57,24 @@ func GetUserInfo(nickname string) (models.User, error) {
 	return u, nil
 }
 func UpdateUser(u models.User) (models.User, error) {
-	err := DB.DBPool.QueryRow(
-		`UPDATE users SET email = $2, fullname = $3, about = $4 
-		WHERE LOWER(nickname) = LOWER($1)
-		RETURNING nickname`,
-		&u.Nickname,
-		&u.Email,
-		&u.Fullname,
-		&u.About,
-	).Scan(&u.Nickname)
+	queryString := "UPDATE users SET "
+	if u.Email != "" {
+		queryString += "email = '" + u.Email
+		if u.About != "" || u.Fullname != "" {
+			queryString += "', "
+		}
+	}
+	if u.Fullname != "" {
+		queryString += "fullname = '" + u.Fullname
+		if u.About != "" {
+			queryString += "', "
+		}
+	}
+	if u.About != "" {
+		queryString += "fullname = '" + u.Fullname + "'"
+	}
+	queryString += `WHERE LOWER(nickname) = LOWER('` + u.Nickname + "') RETURNING nickname"
+	err := DB.DBPool.QueryRow(queryString).Scan(&u.Nickname)
 	if err != nil {
 		return models.User{}, err
 	}

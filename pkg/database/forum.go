@@ -17,12 +17,12 @@ func CreateForum(forum models.Forum) (models.Forum, error) {
 		`
 			INSERT INTO forums (slug, title, "user")
 			VALUES ($1, $2, $3) 
-			RETURNING "user"
+			RETURNING "user", posts, threads
 		`,
 		&forum.Slug,
 		&forum.Title,
 		&forum.User,
-	).Scan(&forum.User)
+	).Scan(&forum.User, &forum.Posts, &forum.Threads)
 
 	switch ErrorCode(err) {
 	case pgxOK:
@@ -52,7 +52,7 @@ func GetForumBySlug(slug string) (models.Forum, error) {
 	f.Posts = p
 	f.Threads = t
 	if err != nil {
-		return models.Forum{}, err
+		return models.Forum{}, ForumNotFound
 	}
 
 	return f, nil

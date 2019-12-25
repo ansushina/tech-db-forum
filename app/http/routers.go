@@ -11,11 +11,11 @@ package http
 
 import (
 	"fmt"
+	"github.com/ansushina/tech-db-forum/app/http/handlers"
+	"github.com/ansushina/tech-db-forum/pkg/logger"
 	"github.com/gorilla/mux"
 	"net/http"
 	"strings"
-	"github.com/ansushina/tech-db-forum/app/http/handlers"
-	"github.com/ansushina/tech-db-forum/pkg/logger"
 )
 
 type Route struct {

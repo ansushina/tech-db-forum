@@ -2,6 +2,7 @@ package database
 
 import (
 	"errors"
+	"log"
 
 	"github.com/ansushina/tech-db-forum/app/models"
 	"github.com/jackc/pgx"
@@ -58,21 +59,22 @@ func GetUserInfo(nickname string) (models.User, error) {
 func UpdateUser(u models.User) (models.User, error) {
 	err := DB.DBPool.QueryRow(
 		`UPDATE users SET email = $2, fullname = $3, about = $4 
-		WHERE LOWER(nickname) = LOWER($1)`,
+		WHERE LOWER(nickname) = LOWER($1)
+		RETURNING nickname`,
 		&u.Nickname,
 		&u.Email,
 		&u.Fullname,
 		&u.About,
-	).Scan()
+	).Scan(&u.Nickname)
 	if err != nil {
-		return models.User{}, UserNotFound
+		return models.User{}, err
 	}
 	return u, nil
 }
 
 func GetForumUsers(slug, limit, since string, desc bool) (models.Users, error) {
 	queryString := " SELECT nickname, fullname, about, email FROM users "
-	queryString += " where forum = " + slug + " "
+	queryString += " where forum = '" + slug + "' "
 
 	if since != "" {
 		queryString += " AND t.created <= TIMESTAMPTZ '" + since + "' "
@@ -86,6 +88,7 @@ func GetForumUsers(slug, limit, since string, desc bool) (models.Users, error) {
 		queryString += " limit " + limit
 	}
 
+	log.Print(queryString)
 	var rows *pgx.Rows
 	var err error
 	rows, err = DB.DBPool.Query(queryString)
@@ -108,10 +111,10 @@ func GetForumUsers(slug, limit, since string, desc bool) (models.Users, error) {
 	}
 
 	if len(users) == 0 {
-		_, err := GetForumBySlug(slug)
-		if err != nil {
-			return models.Users{}, ForumNotFound
-		}
+		//_, err := GetForumBySlug(slug)
+		//if err != nil {
+		//	return models.Users{}, ForumNotFound
+		//}
 	}
 	return users, nil
 

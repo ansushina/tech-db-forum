@@ -37,7 +37,7 @@ func easyjson87afa36eDecodeGithubComAnsushinaTechDbForumAppModels(in *jlexer.Lex
 		}
 		switch key {
 		case "id":
-			out.Id = float32(in.Float32())
+			out.Id = int(in.Int())
 		case "title":
 			out.Title = string(in.String())
 		case "author":
@@ -47,7 +47,7 @@ func easyjson87afa36eDecodeGithubComAnsushinaTechDbForumAppModels(in *jlexer.Lex
 		case "message":
 			out.Message = string(in.String())
 		case "votes":
-			out.Votes = float32(in.Float32())
+			out.Votes = int(in.Int())
 		case "slug":
 			out.Slug = string(in.String())
 		case "created":
@@ -72,7 +72,7 @@ func easyjson87afa36eEncodeGithubComAnsushinaTechDbForumAppModels(out *jwriter.W
 		const prefix string = ",\"id\":"
 		first = false
 		out.RawString(prefix[1:])
-		out.Float32(float32(in.Id))
+		out.Int(int(in.Id))
 	}
 	{
 		const prefix string = ",\"title\":"
@@ -102,7 +102,7 @@ func easyjson87afa36eEncodeGithubComAnsushinaTechDbForumAppModels(out *jwriter.W
 	if in.Votes != 0 {
 		const prefix string = ",\"votes\":"
 		out.RawString(prefix)
-		out.Float32(float32(in.Votes))
+		out.Int(int(in.Votes))
 	}
 	if in.Slug != "" {
 		const prefix string = ",\"slug\":"

@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"io/ioutil"
+	"log"
 	"net/http"
 
 	"github.com/ansushina/tech-db-forum/app/models"
@@ -17,6 +18,9 @@ func UserCreate(w http.ResponseWriter, r *http.Request) {
 
 	nickname, _ := checkVar("nickname", r)
 	u.Nickname = nickname
+
+	//log.Print(string(body))
+	//log.Print(u)
 
 	existingUser, err := database.GetUserInfo(nickname)
 	if err == nil {
@@ -40,6 +44,8 @@ func UserGetOne(w http.ResponseWriter, r *http.Request) {
 	res, err := database.GetUserInfo(nickname)
 
 	switch err {
+	case nil:
+		WriteResponse(w, http.StatusOK, res)
 	case database.UserNotFound:
 		{
 			WriteErrorResponse(w, http.StatusNotFound, "Can't find user with nickname "+nickname)
@@ -52,7 +58,6 @@ func UserGetOne(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	WriteResponse(w, http.StatusOK, res)
 }
 
 func UserUpdate(w http.ResponseWriter, r *http.Request) {
@@ -64,10 +69,13 @@ func UserUpdate(w http.ResponseWriter, r *http.Request) {
 
 	nickname, _ := checkVar("nickname", r)
 	u.Nickname = nickname
+	log.Print(u)
 
 	res, err := database.UpdateUser(u)
 
 	switch err {
+	case nil:
+		WriteResponse(w, http.StatusOK, res)
 	case database.UserNotFound:
 		{
 			WriteErrorResponse(w, http.StatusNotFound, "Can't find user with nickname "+nickname)
@@ -80,5 +88,4 @@ func UserUpdate(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	WriteResponse(w, http.StatusOK, res)
 }

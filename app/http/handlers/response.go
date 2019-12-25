@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"goji.io/pat"
+	"github.com/gorilla/mux"
 )
 
 type errorResponse struct {
@@ -14,9 +14,10 @@ type errorResponse struct {
 }
 
 func checkVar(varName string, req *http.Request) (string, error) {
-	requestVariables := pat.Param(req, varName)
-
-	return requestVariables, nil
+	//log.Print(varName)
+	//requestVariables := pat.Param(req, varName)
+	vars := mux.Vars(req)
+	return vars[varName], nil
 }
 
 func WriteErrorResponse(w http.ResponseWriter, errCode int, errMsg string) {

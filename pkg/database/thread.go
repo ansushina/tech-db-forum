@@ -2,6 +2,7 @@ package database
 
 import (
 	"errors"
+	"log"
 	"strconv"
 
 	"github.com/ansushina/tech-db-forum/app/models"
@@ -140,7 +141,7 @@ func VoteForThread(param string, vote models.Vote) (models.Thread, error) {
 func GetForumThreads(slug, limit, since string, desc bool) (models.Threads, error) {
 
 	queryString := " SELECT author, created, forum, id, message, slug, title, votes FROM threads "
-	queryString += " where forum = " + slug + " "
+	queryString += " where forum = '" + slug + "' "
 
 	if since != "" {
 		queryString += " AND t.created <= TIMESTAMPTZ '" + since + "' "
@@ -154,6 +155,7 @@ func GetForumThreads(slug, limit, since string, desc bool) (models.Threads, erro
 		queryString += " limit " + limit
 	}
 
+	log.Print(queryString)
 	var rows *pgx.Rows
 	var err error
 	rows, err = DB.DBPool.Query(queryString)
@@ -180,10 +182,10 @@ func GetForumThreads(slug, limit, since string, desc bool) (models.Threads, erro
 	}
 
 	if len(threads) == 0 {
-		_, err := GetForumBySlug(slug)
-		if err != nil {
-			return models.Threads{}, ForumNotFound
-		}
+		//_, err := GetForumBySlug(slug)
+		//if err != nil {
+		//	return models.Threads{}, ForumNotFound
+		//}
 	}
 	return threads, nil
 }
@@ -191,12 +193,14 @@ func GetForumThreads(slug, limit, since string, desc bool) (models.Threads, erro
 func CreateForumThread(t models.Thread) (models.Thread, error) {
 	err := DB.DBPool.QueryRow(
 		`INSERT INTO threads (title, author, forum, message, slug) 
-		values ($1, $2, $3, $4, $5)`,
-		&t.Title,
-		&t.Author,
-		&t.Forum,
-		&t.Message,
-		&t.Slug,
+		values ($1, $2, $3, $4, $5)
+		RETURNING id, title, author, forum, message, slug, created, votes
+		`,
+		t.Title,
+		t.Author,
+		t.Forum,
+		t.Message,
+		t.Slug,
 	).Scan(
 		&t.Id,
 		&t.Title,

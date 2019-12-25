@@ -17,13 +17,7 @@ func ThreadCreate(w http.ResponseWriter, r *http.Request) {
 	_ = t.UnmarshalJSON(body)
 	slug, _ := checkVar("slug", r)
 
-	t.Slug = slug
-
-	existing, e := database.GetForumBySlug(slug)
-	if e == nil {
-		WriteResponse(w, http.StatusConflict, existing)
-		return
-	}
+	t.Forum = slug
 
 	res, err := database.CreateForumThread(t)
 
@@ -104,7 +98,7 @@ func ThreadUpdate(w http.ResponseWriter, r *http.Request) {
 	_ = t.UnmarshalJSON(body)
 	slug, _ := checkVar("slug", r)
 
-	t.Slug = slug
+	t.Forum = slug
 
 	res, err := database.UpdateThreadBySlugorId(slug, t)
 

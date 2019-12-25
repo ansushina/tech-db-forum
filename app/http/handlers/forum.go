@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"io/ioutil"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -16,6 +17,8 @@ func ForumCreate(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	_ = f.UnmarshalJSON(body)
+
+	log.Print(f)
 
 	_, err := database.GetUserInfo(f.User)
 	if err != nil {
@@ -40,7 +43,10 @@ func ForumCreate(w http.ResponseWriter, r *http.Request) {
 
 func ForumGetOne(w http.ResponseWriter, r *http.Request) {
 	slug, _ := checkVar("slug", r)
+	log.Print(slug)
+
 	f, err := database.GetForumBySlug(slug)
+	log.Print(f)
 	switch err {
 	case nil:
 		WriteResponse(w, http.StatusOK, f)

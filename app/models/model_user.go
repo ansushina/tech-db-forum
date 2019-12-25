@@ -19,7 +19,7 @@ type User struct {
 	Fullname string `json:"fullname"`
 
 	// Описание пользователя.
-	About string `json:"about,omitempty"`
+	About string `json:"about"`
 
 	// Почтовый адрес пользователя (уникальное поле).
 	Email string `json:"email"`

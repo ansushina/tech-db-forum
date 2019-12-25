@@ -7,6 +7,7 @@ DROP TABLE IF EXISTS votes CASCADE;
 DROP TABLE IF EXISTS forum_users CASCADE;
 
 CREATE TABLE users (
+  "id"       SERIAL UNIQUE,
   "nickname" TEXT UNIQUE PRIMARY KEY,
   "fullname" TEXT NOT NULL,
   "about"    TEXT,
@@ -39,8 +40,8 @@ CREATE TABLE posts (
   "forum"    TEXT           NOT NULL REFERENCES forums ("slug"),
   "isEdited" BOOLEAN        DEFAULT FALSE,
   "message"  TEXT           NOT NULL,
-  "parent"   INTEGER        DEFAULT 0,
-  "thread"   INTEGER        NOT NULL REFERENCES threads ("id")
+  "parent"   INT        DEFAULT 0,
+  "thread"   INT       NOT NULL REFERENCES threads ("id")
 );
 
 CREATE TABLE votes (
@@ -48,3 +49,20 @@ CREATE TABLE votes (
   "voice"    INTEGER NOT NULL,
   "nickname" TEXT   NOT NULL
 );
+
+CREATE TABLE forum_users
+(
+  "forum_user"  TEXT COLLATE ucs_basic NOT NULL,
+  "forum"       TEXT NOT NULL
+);
+
+
+DROP FUNCTION IF EXISTS add_forum_user();
+CREATE OR REPLACE FUNCTION add_forum_user() RETURNS TRIGGER AS $add_forum_user$
+BEGIN
+  INSERT INTO forum_users VALUES (NEW.author, NEW.forum) ON CONFLICT DO NOTHING;
+  RETURN NULL;
+END;
+$add_forum_user$
+LANGUAGE plpgsql;
+CREATE TRIGGER add_forum_user AFTER INSERT ON threads FOR EACH ROW EXECUTE PROCEDURE add_forum_user();

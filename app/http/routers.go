@@ -130,28 +130,28 @@ var routes = Routes{
 	Route{
 		"ThreadGetOne",
 		strings.ToUpper("Get"),
-		"/api/thread/{slug_or_id}/details",
+		"/api/thread/{slug}/details",
 		handlers.ThreadGetOne,
 	},
 
 	Route{
 		"ThreadGetPosts",
 		strings.ToUpper("Get"),
-		"/api/thread/{slug_or_id}/posts",
+		"/api/thread/{slug}/posts",
 		handlers.ThreadGetPosts,
 	},
 
 	Route{
 		"ThreadUpdate",
 		strings.ToUpper("Post"),
-		"/api/thread/{slug_or_id}/details",
+		"/api/thread/{slug}/details",
 		handlers.ThreadUpdate,
 	},
 
 	Route{
 		"ThreadVote",
 		strings.ToUpper("Post"),
-		"/api/thread/{slug_or_id}/vote",
+		"/api/thread/{slug}/vote",
 		handlers.ThreadVote,
 	},
 

@@ -35,7 +35,7 @@ func UserCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	WriteResponse(w, http.StatusOK, res)
+	WriteResponse(w, http.StatusCreated, res)
 }
 
 func UserGetOne(w http.ResponseWriter, r *http.Request) {

@@ -2,6 +2,8 @@ package database
 
 import (
 	"errors"
+	"log"
+
 	"github.com/jackc/pgx"
 
 	"github.com/ansushina/tech-db-forum/app/models"
@@ -15,7 +17,7 @@ var (
 func GetPostById(id int) (models.Post, error) {
 	var p models.Post
 	err := DB.DBPool.QueryRow(
-		`SELECT id, author, created, forum, isEdited, message, parent, thread 
+		`SELECT id, author, created, forum, "isEdited", message, parent, thread 
 		FROM posts WHERE id = $1`, id).Scan(
 		&p.Id,
 		&p.Author,
@@ -34,44 +36,49 @@ func GetPostById(id int) (models.Post, error) {
 }
 func UpdatePost(p models.Post) (models.Post, error) {
 	err := DB.DBPool.QueryRow(
-		`UPDATE users SET message = $2, isEdited = 'true' 
-		WHERE id = $1`,
+		`UPDATE posts SET message = $2, "isEdited" = 'true' 
+		WHERE id = $1
+		returning id, author`,
 		&p.Id,
 		&p.Message,
-	).Scan()
+	).Scan(&p.Id, &p.Author)
+	log.Print(err)
 	if err != nil {
-		return models.Post{}, UserNotFound
+		return models.Post{}, PostNotFound
 	}
 	p.IsEdited = true
 	return p, nil
 }
 
 func CreateThreadPost(slug string, p models.Post) (models.Post, error) {
+	var id int
 	err := DB.DBPool.QueryRow(
 		`
-			INSERT INTO posts (author, forum, message, parent, thread)
-			VALUES ($1, $2, $3) 
+			INSERT INTO posts (author, forum, message, thread)
+			VALUES ($1, $2, $3, $4) 
 			RETURNING "id"
 		`,
-		&p.Author,
-		&p.Forum,
-		&p.Message,
-		&p.Parent,
-		&p.Thread,
-	).Scan(&p.Id)
+		p.Author,
+		p.Forum,
+		p.Message,
+		int(p.Thread),
+	).Scan(&id)
+	p.Id = id
+
+	log.Print(err)
 
 	switch ErrorCode(err) {
 	case pgxOK:
 		return p, nil
 	case pgxErrNotNull:
-		return models.Post{}, UserNotFound
+		return models.Post{}, PostNotFound
 	default:
 		return models.Post{}, err
 	}
 }
 
 func GetThreadPosts(param string, limit, since string, desc bool) (models.Posts, error) {
-	queryString := " SELECT author, created, forum, id, message, parent, thread, isEdited FROM posts "
+	queryString := ` SELECT author, created, forum, id, message, parent, thread, "isEdited" FROM posts `
 	if isNumber(param) {
 		queryString += " where thread = " + param + " "
 	} else {
@@ -89,6 +96,8 @@ func GetThreadPosts(param string, limit, since string, desc bool) (models.Posts,
 	if limit != "" {
 		queryString += " limit " + limit
 	}
+
+	log.Print(queryString)
 
 	var rows *pgx.Rows
 	var err error
@@ -112,14 +121,16 @@ func GetThreadPosts(param string, limit, since string, desc bool) (models.Posts,
 			&t.Thread,
 			&t.IsEdited,
 		)
+		log.Print(t)
 		posts = append(posts, &t)
 	}
 
 	if len(posts) == 0 {
-		_, err := GetThreadBySlug(param)
-		if err != nil {
-			return models.Posts{}, ForumNotFound
-		}
+		//_, err := GetThreadBySlug(param)
+		//if err != nil {
+		//	return models.Posts{}, ForumNotFound
+		//	}
 	}
+	log.Print(posts)
 	return posts, nil
 }

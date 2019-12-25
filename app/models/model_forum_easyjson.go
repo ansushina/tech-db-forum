@@ -43,9 +43,9 @@ func easyjsonF6e70f3DecodeGithubComAnsushinaTechDbForumAppModels(in *jlexer.Lexe
 		case "slug":
 			out.Slug = string(in.String())
 		case "posts":
-			out.Posts = float32(in.Float32())
+			out.Posts = int(in.Int())
 		case "threads":
-			out.Threads = float32(in.Float32())
+			out.Threads = int(in.Int())
 		default:
 			in.SkipRecursive()
 		}
@@ -78,12 +78,12 @@ func easyjsonF6e70f3EncodeGithubComAnsushinaTechDbForumAppModels(out *jwriter.Wr
 	if in.Posts != 0 {
 		const prefix string = ",\"posts\":"
 		out.RawString(prefix)
-		out.Float32(float32(in.Posts))
+		out.Int(int(in.Posts))
 	}
 	if in.Threads != 0 {
 		const prefix string = ",\"threads\":"
 		out.RawString(prefix)
-		out.Float32(float32(in.Threads))
+		out.Int(int(in.Threads))
 	}
 	out.RawByte('}')
 }

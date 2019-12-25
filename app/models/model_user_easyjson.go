@@ -74,7 +74,7 @@ func easyjson38520a27EncodeGithubComAnsushinaTechDbForumAppModels(out *jwriter.W
 		}
 		out.String(string(in.Fullname))
 	}
-	if in.About != "" {
+	{
 		const prefix string = ",\"about\":"
 		out.RawString(prefix)
 		out.String(string(in.About))

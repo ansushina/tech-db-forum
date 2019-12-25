@@ -73,13 +73,13 @@ func UpdateUser(u models.User) (models.User, error) {
 }
 
 func GetForumUsers(slug, limit, since string, desc bool) (models.Users, error) {
-	queryString := " SELECT nickname, fullname, about, email FROM users "
+	queryString := " SELECT nickname, fullname, about, email FROM users u join forum_users f on u.nickname = f.forum_user "
 	queryString += " where forum = '" + slug + "' "
 
 	if since != "" {
-		queryString += " AND t.created <= TIMESTAMPTZ '" + since + "' "
+		queryString += " AND u.id > " + since + " "
 	}
-	queryString += " order by created "
+	queryString += " order by id "
 	if desc {
 		queryString += " DESC "
 	}

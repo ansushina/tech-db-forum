@@ -39,7 +39,7 @@ func easyjson544c96aDecodeGithubComAnsushinaTechDbForumAppModels(in *jlexer.Lexe
 		case "nickname":
 			out.Nickname = string(in.String())
 		case "voice":
-			out.Voice = float32(in.Float32())
+			out.Voice = int(in.Int())
 		default:
 			in.SkipRecursive()
 		}
@@ -62,7 +62,7 @@ func easyjson544c96aEncodeGithubComAnsushinaTechDbForumAppModels(out *jwriter.Wr
 	{
 		const prefix string = ",\"voice\":"
 		out.RawString(prefix)
-		out.Float32(float32(in.Voice))
+		out.Int(int(in.Voice))
 	}
 	out.RawByte('}')
 }

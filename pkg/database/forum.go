@@ -49,8 +49,8 @@ func GetForumBySlug(slug string) (models.Forum, error) {
 		&t,
 	)
 
-	f.Posts = float32(p)
-	f.Threads = float32(t)
+	f.Posts = p
+	f.Threads = t
 	if err != nil {
 		return models.Forum{}, err
 	}

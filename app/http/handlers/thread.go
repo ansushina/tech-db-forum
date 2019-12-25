@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"io/ioutil"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -76,6 +77,7 @@ func ThreadGetPosts(w http.ResponseWriter, r *http.Request) {
 		return
 
 	}
+	log.Print(slug)
 
 	res, err := database.GetThreadPosts(slug, limit, since, desc)
 

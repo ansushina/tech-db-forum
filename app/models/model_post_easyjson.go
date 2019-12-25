@@ -37,9 +37,9 @@ func easyjson3efd0404DecodeGithubComAnsushinaTechDbForumAppModels(in *jlexer.Lex
 		}
 		switch key {
 		case "id":
-			out.Id = float32(in.Float32())
+			out.Id = int(in.Int())
 		case "parent":
-			out.Parent = float32(in.Float32())
+			out.Parent = int(in.Int())
 		case "author":
 			out.Author = string(in.String())
 		case "message":
@@ -49,7 +49,7 @@ func easyjson3efd0404DecodeGithubComAnsushinaTechDbForumAppModels(in *jlexer.Lex
 		case "forum":
 			out.Forum = string(in.String())
 		case "thread":
-			out.Thread = float32(in.Float32())
+			out.Thread = int(in.Int())
 		case "created":
 			if data := in.Raw(); in.Ok() {
 				in.AddError((out.Created).UnmarshalJSON(data))
@@ -72,7 +72,7 @@ func easyjson3efd0404EncodeGithubComAnsushinaTechDbForumAppModels(out *jwriter.W
 		const prefix string = ",\"id\":"
 		first = false
 		out.RawString(prefix[1:])
-		out.Float32(float32(in.Id))
+		out.Int(int(in.Id))
 	}
 	if in.Parent != 0 {
 		const prefix string = ",\"parent\":"
@@ -82,7 +82,7 @@ func easyjson3efd0404EncodeGithubComAnsushinaTechDbForumAppModels(out *jwriter.W
 		} else {
 			out.RawString(prefix)
 		}
-		out.Float32(float32(in.Parent))
+		out.Int(int(in.Parent))
 	}
 	{
 		const prefix string = ",\"author\":"
@@ -112,7 +112,7 @@ func easyjson3efd0404EncodeGithubComAnsushinaTechDbForumAppModels(out *jwriter.W
 	if in.Thread != 0 {
 		const prefix string = ",\"thread\":"
 		out.RawString(prefix)
-		out.Float32(float32(in.Thread))
+		out.Int(int(in.Thread))
 	}
 	if true {
 		const prefix string = ",\"created\":"

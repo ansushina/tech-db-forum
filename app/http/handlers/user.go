@@ -22,9 +22,22 @@ func UserCreate(w http.ResponseWriter, r *http.Request) {
 	//log.Print(string(body))
 	//log.Print(u)
 
+	us := models.Users{}
 	existingUser, err := database.GetUserInfo(nickname)
 	if err == nil {
-		WriteResponse(w, http.StatusConflict, existingUser)
+		us = append(us, &existingUser)
+		log.Print("user exist")
+		log.Print(existingUser)
+
+	}
+	exUser, e := database.GetUserByEmail(u.Email)
+	if e == nil && existingUser != exUser {
+		us = append(us, &exUser)
+		log.Print("login exist")
+		log.Print(exUser)
+	}
+	if err == nil || e == nil {
+		WriteResponse(w, http.StatusConflict, us)
 		return
 	}
 
@@ -70,6 +83,14 @@ func UserUpdate(w http.ResponseWriter, r *http.Request) {
 	nickname, _ := checkVar("nickname", r)
 	u.Nickname = nickname
 	log.Print(u)
+
+	if u.Email != "" {
+		exUser, e := database.GetUserByEmail(u.Email)
+		if e == nil {
+			WriteErrorResponse(w, http.StatusConflict, "This email is already registered by user: "+exUser.Nickname)
+			return
+		}
+	}
 
 	res, err := database.UpdateUser(u)
 

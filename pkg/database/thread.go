@@ -65,10 +65,10 @@ func UpdateThreadBySlugorId(param string, t models.Thread) (models.Thread, error
 	} else {
 		queryString += " where slug = " + param + " "
 	}
-	queryString += "RETURNING id, slug"
+	queryString += "RETURNING id, slug, title, message, author"
 
 	row := DB.DBPool.QueryRow(queryString)
-	_ = row.Scan(&t.Id, &t.Slug)
+	_ = row.Scan(&t.Id, &t.Slug, &t.Title, &t.Message, &t.Author)
 	return t, nil
 }
 
@@ -194,8 +194,8 @@ func GetForumThreads(slug, limit, since string, desc bool) (models.Threads, erro
 
 func CreateForumThread(t models.Thread) (models.Thread, error) {
 	err := DB.DBPool.QueryRow(
-		`INSERT INTO threads (title, author, forum, message, slug) 
-		values ($1, $2, $3, $4, $5)
+		`INSERT INTO threads (title, author, forum, message, slug, created) 
+		values ($1, $2, $3, $4, $5, $6)
 		RETURNING id, title, author, forum, message, slug, created, votes
 		`,
 		t.Title,
@@ -203,6 +203,7 @@ func CreateForumThread(t models.Thread) (models.Thread, error) {
 		t.Forum,
 		t.Message,
 		t.Slug,
+		t.Created,
 	).Scan(
 		&t.Id,
 		&t.Title,

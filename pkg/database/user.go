@@ -14,6 +14,7 @@ var (
 )
 
 func CreateUser(user models.User) (models.User, error) {
+
 	err := DB.DBPool.QueryRow(
 		`
 			INSERT INTO users (nickname, fullname, about, email)
@@ -30,13 +31,32 @@ func CreateUser(user models.User) (models.User, error) {
 	case pgxOK:
 		return user, nil
 	case pgxErrUnique:
-		f, _ := GetUserInfo(user.Nickname)
+		f, _ := GetUserByEmail(user.Email)
+		log.Print(f)
 		return f, UserIsExist
 	case pgxErrNotNull:
 		return models.User{}, UserNotFound
 	default:
 		return models.User{}, err
 	}
+}
+func GetUserByEmail(email string) (models.User, error) {
+	var u models.User
+	err := DB.DBPool.QueryRow(
+		`SELECT nickname, fullname, about, email 
+		FROM users WHERE LOWER(email) = LOWER($1)`,
+		email,
+	).Scan(
+		&u.Nickname,
+		&u.Fullname,
+		&u.About,
+		&u.Email,
+	)
+	if err != nil {
+		return models.User{}, UserNotFound
+	}
+
+	return u, nil
 }
 func GetUserInfo(nickname string) (models.User, error) {
 	var u models.User
@@ -57,26 +77,34 @@ func GetUserInfo(nickname string) (models.User, error) {
 	return u, nil
 }
 func UpdateUser(u models.User) (models.User, error) {
-	queryString := "UPDATE users SET "
+	query := "UPDATE users SET "
+	queryString := ""
 	if u.Email != "" {
-		queryString += "email = '" + u.Email
+		queryString += "email = '" + u.Email + "'"
 		if u.About != "" || u.Fullname != "" {
-			queryString += "', "
+			queryString += ", "
 		}
 	}
 	if u.Fullname != "" {
-		queryString += "fullname = '" + u.Fullname
+		queryString += "fullname = '" + u.Fullname + "'"
 		if u.About != "" {
-			queryString += "', "
+			queryString += ", "
 		}
 	}
 	if u.About != "" {
-		queryString += "fullname = '" + u.Fullname + "'"
+		queryString += "About = '" + u.About + "'"
 	}
-	queryString += `WHERE LOWER(nickname) = LOWER('` + u.Nickname + "') RETURNING nickname"
-	err := DB.DBPool.QueryRow(queryString).Scan(&u.Nickname)
+	if queryString == "" {
+		err := DB.DBPool.QueryRow("select nickname, email, fullname, about from users where nickname = $1", u.Nickname).Scan(&u.Nickname, &u.Email, &u.Fullname, &u.About)
+		if err != nil {
+			return models.User{}, UserNotFound
+		}
+		return u, nil
+	}
+	queryString += `WHERE nickname = '` + u.Nickname + "' RETURNING nickname, email, fullname, about"
+	err := DB.DBPool.QueryRow(query+queryString).Scan(&u.Nickname, &u.Email, &u.Fullname, &u.About)
 	if err != nil {
-		return models.User{}, err
+		return models.User{}, UserNotFound
 	}
 	return u, nil
 }

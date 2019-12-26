@@ -41,7 +41,7 @@ func GetForumBySlug(slug string) (models.Forum, error) {
 	var f models.Forum
 	var p, t int
 
-	err := DB.DBPool.QueryRow(`SELECT slug, title, "user", posts, threads FROM forums WHERE slug = $1`, slug).Scan(
+	err := DB.DBPool.QueryRow(`SELECT slug, title, "user", posts, threads FROM forums WHERE LOWER(slug) = LOWER($1)`, slug).Scan(
 		&f.Slug,
 		&f.Title,
 		&f.User,

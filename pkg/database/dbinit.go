@@ -70,56 +70,6 @@ func (db *DataBase) Close() error {
 	return nil
 }
 
-func Begin() (tx *pgx.Tx, err error) {
-	if DB.DBPool == nil {
-		return tx, errors.New("no connection")
-	}
-
-	return DB.DBPool.Begin()
-}
-
-func QueryRow(query string, args ...interface{}) (row *pgx.Row, err error) {
-	tx, err := Begin()
-	if err != nil {
-		return
-	}
-	defer tx.Rollback()
-
-	row = tx.QueryRow(query, args...)
-
-	return row, tx.Commit()
-}
-
-func Query(query string, args ...interface{}) (rows *pgx.Rows, err error) {
-	tx, err := Begin()
-	if err != nil {
-		return
-	}
-	defer tx.Rollback()
-
-	rows, err = tx.Query(query, args...)
-	if err != nil {
-		return
-	}
-
-	return rows, tx.Commit()
-}
-
-func Exec(query string, args ...interface{}) (tag pgx.CommandTag, err error) {
-	tx, err := Begin()
-	if err != nil {
-		return
-	}
-	defer tx.Rollback()
-
-	tag, err = tx.Exec(query, args...)
-	if err != nil {
-		return
-	}
-
-	return tag, tx.Commit()
-}
-
 func ErrorCode(err error) string {
 	pgerr, ok := err.(pgx.PgError)
 	if !ok {

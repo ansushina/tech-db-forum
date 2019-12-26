@@ -26,5 +26,6 @@ go run main.go
 To run docker, follow this steps:
 ```
 docker build -t tech-db -f dockerfile .
+docker run -p 5000:5000 --name tech-db -t tech-db
 ```
 

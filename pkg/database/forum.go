@@ -2,6 +2,7 @@ package database
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/ansushina/tech-db-forum/app/models"
 )
@@ -13,16 +14,21 @@ var (
 )
 
 func CreateForum(forum models.Forum) (models.Forum, error) {
+	var nick string
 	err := DB.DBPool.QueryRow(
 		`
 			INSERT INTO forums (slug, title, "user")
-			VALUES ($1, $2, $3) 
-			RETURNING "user", posts, threads
+			VALUES ($1, $2,  (
+				SELECT nickname FROM users WHERE LOWER(nickname) = LOWER($3)
+				))
+			RETURNING "user"
 		`,
-		&forum.Slug,
-		&forum.Title,
-		&forum.User,
-	).Scan(&forum.User, &forum.Posts, &forum.Threads)
+		forum.Slug,
+		forum.Title,
+		forum.User,
+	).Scan(&nick)
+	forum.User = nick
+	fmt.Println(nick)
 
 	switch ErrorCode(err) {
 	case pgxOK:

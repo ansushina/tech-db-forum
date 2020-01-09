@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -32,13 +33,14 @@ func ForumCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = database.CreateForum(f)
+	var newForum models.Forum
+	newForum, err = database.CreateForum(f)
 	if err != nil {
 		WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	WriteResponse(w, http.StatusCreated, f)
+	WriteResponse(w, http.StatusCreated, newForum)
 }
 
 func ForumGetOne(w http.ResponseWriter, r *http.Request) {
@@ -46,7 +48,6 @@ func ForumGetOne(w http.ResponseWriter, r *http.Request) {
 	log.Print(slug)
 
 	f, err := database.GetForumBySlug(slug)
-	log.Print(f)
 	switch err {
 	case nil:
 		WriteResponse(w, http.StatusOK, f)
@@ -67,8 +68,8 @@ func ForumGetThreads(w http.ResponseWriter, r *http.Request) {
 
 	slug, _ := checkVar("slug", r)
 	query := r.URL.Query()
-	limit := query.Get("limit")
 	since := query.Get("since")
+	limit := query.Get("limit")
 	desc, _ := strconv.ParseBool(query.Get("desc"))
 
 	_, e := database.GetForumBySlug(slug)
@@ -98,6 +99,7 @@ func ForumGetUsers(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
 	limit := query.Get("limit")
 	since := query.Get("since")
+	fmt.Println(since)
 	desc, _ := strconv.ParseBool(query.Get("desc"))
 
 	_, e := database.GetForumBySlug(slug)

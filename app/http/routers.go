@@ -109,7 +109,7 @@ var routes = Routes{
 	Route{
 		"PostsCreate",
 		strings.ToUpper("Post"),
-		"/api/thread/{slug_or_id}/create",
+		"/api/thread/{slug}/create",
 		handlers.PostsCreate,
 	},
 

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -33,23 +34,24 @@ func ThreadCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if t.Slug != "" {
+		existing, existErr := database.GetThreadBySlug(t.Slug)
+		fmt.Println(existing)
+		if existErr == nil {
+			WriteResponse(w, http.StatusConflict, existing)
+			return
+		}
+	}
+
 	t.Forum = slug
 
 	res, err := database.CreateForumThread(t)
 
-	switch err {
-	case nil:
+	if err == nil {
 		WriteResponse(w, http.StatusCreated, res)
-	case database.ThreadNotFound:
-		{
-			WriteErrorResponse(w, http.StatusNotFound, "Can't find thread with slug "+slug)
-			return
-		}
-	default:
-		{
-			WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-			return
-		}
+	} else {
+		WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		return
 	}
 }
 
@@ -83,8 +85,8 @@ func ThreadGetPosts(w http.ResponseWriter, r *http.Request) {
 	since := query.Get("since")
 	desc, _ := strconv.ParseBool(query.Get("desc"))
 
-	_, e := database.GetThreadBySlug(slug)
-	if e == database.ForumNotFound {
+	th, e := database.GetThreadBySlug(slug)
+	if e == database.ThreadNotFound {
 		WriteErrorResponse(w, http.StatusNotFound, "Can't find thread with slug "+slug)
 		return
 	} else if e != nil {
@@ -92,9 +94,9 @@ func ThreadGetPosts(w http.ResponseWriter, r *http.Request) {
 		return
 
 	}
-	log.Print(slug)
 
-	res, err := database.GetThreadPosts(slug, limit, since, desc)
+	res, err := database.GetThreadPosts(strconv.Itoa(th.Id), limit, since, desc)
+	log.Print(res)
 
 	if err == database.ThreadNotFound {
 		WriteErrorResponse(w, http.StatusNotFound, "Can't find thread with slug "+slug)

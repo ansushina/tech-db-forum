@@ -64,19 +64,22 @@ func PostUpdate(w http.ResponseWriter, r *http.Request) {
 func PostsCreate(w http.ResponseWriter, r *http.Request) {
 	slug, _ := checkVar("slug", r)
 
+	p := models.Posts{}
+	body, _ := ioutil.ReadAll(r.Body)
+	defer r.Body.Close()
+
+	_ = p.UnmarshalJSON(body)
+	if len(p) == 0 {
+		WriteResponse(w, http.StatusCreated, p)
+		return
+	}
+
 	th, err := database.GetThreadBySlug(slug)
 
 	if err != nil {
 		WriteErrorResponse(w, http.StatusNotFound, "Can't find thread with slug "+slug)
 		return
 	}
-
-	p := models.Posts{}
-	body, _ := ioutil.ReadAll(r.Body)
-	defer r.Body.Close()
-
-	_ = p.UnmarshalJSON(body)
-
 	_, err = database.GetUserInfo(p[0].Author)
 	if err != nil {
 		WriteErrorResponse(w, http.StatusNotFound, "Can't find user with nickname "+p[0].Author)
@@ -86,7 +89,7 @@ func PostsCreate(w http.ResponseWriter, r *http.Request) {
 	for _, value := range p {
 		value.Thread = th.Id
 		value.Forum = th.Forum
-		_, err = database.CreateThreadPost(slug, *value)
+		_, err = database.CreateThreadPost(slug, value)
 		if err != nil {
 			WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return

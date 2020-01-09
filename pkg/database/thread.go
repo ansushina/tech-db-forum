@@ -40,7 +40,7 @@ func GetThreadBySlug(param string) (models.Thread, error) {
 		slug := param
 		var t models.Thread
 
-		err := DB.DBPool.QueryRow(`SELECT id, votes, created, slug, title, author, forum, message FROM threads WHERE slug = $1`, slug).Scan(
+		err := DB.DBPool.QueryRow(`SELECT id, votes, created, slug, title, author, forum, message FROM threads WHERE LOWER(slug) = LOWER($1)`, slug).Scan(
 			&t.Id,
 			&t.Votes,
 			&t.Created,
@@ -59,11 +59,11 @@ func GetThreadBySlug(param string) (models.Thread, error) {
 }
 
 func UpdateThreadBySlugorId(param string, t models.Thread) (models.Thread, error) {
-	queryString := " update treads set title = " + t.Title + "message = " + t.Message
+	queryString := " update threads set title = " + t.Title + "message = " + t.Message
 	if isNumber(param) {
 		queryString += " where id = " + param + " "
 	} else {
-		queryString += " where slug = " + param + " "
+		queryString += " where LOWER(slug) = LOWER('" + param + "') "
 	}
 	queryString += "RETURNING id, slug, title, message, author"
 
@@ -95,7 +95,7 @@ func VoteForThread(param string, vote models.Vote) (models.Thread, error) {
 			&thread.Votes,
 		)
 	} else {
-		err = tx.QueryRow(`SELECT id, author, created, forum, message, slug, title, votes FROM threads WHERE slug = $1`, param).Scan(
+		err = tx.QueryRow(`SELECT id, author, created, forum, message, slug, title, votes FROM threads WHERE LOWER(slug) = LOWER($1)`, param).Scan(
 			&thread.Id,
 			&thread.Author,
 			&thread.Created,
@@ -142,11 +142,13 @@ func VoteForThread(param string, vote models.Vote) (models.Thread, error) {
 
 func GetForumThreads(slug, limit, since string, desc bool) (models.Threads, error) {
 
-	queryString := " SELECT author, created, forum, id, message, slug, title, votes FROM threads "
-	queryString += " where forum = '" + slug + "' "
+	queryString := " SELECT author, created, forum, id, message, slug, title, votes FROM threads t "
+	queryString += " where LOWER(forum) = LOWER('" + slug + "')"
 
-	if since != "" {
+	if since != "" && desc {
 		queryString += " AND t.created <= TIMESTAMPTZ '" + since + "' "
+	} else if since != "" {
+		queryString += " AND t.created >= TIMESTAMPTZ '" + since + "' "
 	}
 	queryString += " order by created "
 	if desc {
@@ -161,6 +163,7 @@ func GetForumThreads(slug, limit, since string, desc bool) (models.Threads, erro
 	var rows *pgx.Rows
 	var err error
 	rows, err = DB.DBPool.Query(queryString)
+	//fmt.Println(err)
 
 	if err != nil {
 		return models.Threads{}, err
@@ -195,7 +198,8 @@ func GetForumThreads(slug, limit, since string, desc bool) (models.Threads, erro
 func CreateForumThread(t models.Thread) (models.Thread, error) {
 	err := DB.DBPool.QueryRow(
 		`INSERT INTO threads (title, author, forum, message, slug, created) 
-		values ($1, $2, $3, $4, $5, $6)
+		values ($1, (select nickname from users where LOWER(nickname) = LOWER($2)), 
+			(select slug from forums where LOWER(slug)=LOWER($3)), $4, $5, $6)
 		RETURNING id, title, author, forum, message, slug, created, votes
 		`,
 		t.Title,

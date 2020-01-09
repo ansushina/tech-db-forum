@@ -50,7 +50,7 @@ func UpdatePost(p models.Post) (models.Post, error) {
 	return p, nil
 }
 
-func CreateThreadPost(slug string, p models.Post) (models.Post, error) {
+func CreateThreadPost(slug string, p *models.Post) (models.Post, error) {
 	var id int
 	err := DB.DBPool.QueryRow(
 		`
@@ -69,7 +69,7 @@ func CreateThreadPost(slug string, p models.Post) (models.Post, error) {
 
 	switch ErrorCode(err) {
 	case pgxOK:
-		return p, nil
+		return *p, nil
 	case pgxErrNotNull:
 		return models.Post{}, PostNotFound
 	default:
@@ -121,7 +121,7 @@ func GetThreadPosts(param string, limit, since string, desc bool) (models.Posts,
 			&t.Thread,
 			&t.IsEdited,
 		)
-		log.Print(t)
+		//log.Print(t)
 		posts = append(posts, &t)
 	}
 

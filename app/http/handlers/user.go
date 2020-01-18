@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"io/ioutil"
-	"log"
 	"net/http"
 
 	"github.com/ansushina/tech-db-forum/app/models"
@@ -26,15 +25,15 @@ func UserCreate(w http.ResponseWriter, r *http.Request) {
 	existingUser, err := database.GetUserInfo(nickname)
 	if err == nil {
 		us = append(us, &existingUser)
-		log.Print("user exist")
-		log.Print(existingUser)
+		//log.Print("user exist")
+		//log.Print(existingUser)
 
 	}
 	exUser, e := database.GetUserByEmail(u.Email)
 	if e == nil && existingUser != exUser {
 		us = append(us, &exUser)
-		log.Print("login exist")
-		log.Print(exUser)
+		//log.Print("login exist")
+		//log.Print(exUser)
 	}
 	if err == nil || e == nil {
 		WriteResponse(w, http.StatusConflict, us)
@@ -82,7 +81,7 @@ func UserUpdate(w http.ResponseWriter, r *http.Request) {
 
 	nickname, _ := checkVar("nickname", r)
 	u.Nickname = nickname
-	log.Print(u)
+	//log.Print(u)
 
 	if u.Email != "" {
 		exUser, e := database.GetUserByEmail(u.Email)

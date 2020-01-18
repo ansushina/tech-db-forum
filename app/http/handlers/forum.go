@@ -1,9 +1,7 @@
 package handlers
 
 import (
-	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strconv"
 
@@ -19,7 +17,7 @@ func ForumCreate(w http.ResponseWriter, r *http.Request) {
 
 	_ = f.UnmarshalJSON(body)
 
-	log.Print(f)
+	//log.Print(f)
 
 	_, err := database.GetUserInfo(f.User)
 	if err != nil {
@@ -45,7 +43,7 @@ func ForumCreate(w http.ResponseWriter, r *http.Request) {
 
 func ForumGetOne(w http.ResponseWriter, r *http.Request) {
 	slug, _ := checkVar("slug", r)
-	log.Print(slug)
+	//log.Print(slug)
 
 	f, err := database.GetForumBySlug(slug)
 	switch err {
@@ -99,8 +97,11 @@ func ForumGetUsers(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
 	limit := query.Get("limit")
 	since := query.Get("since")
-	fmt.Println(since)
-	desc, _ := strconv.ParseBool(query.Get("desc"))
+	//fmt.Println(since)
+	desc := query.Get("desc")
+	if desc == "" {
+		desc = "false"
+	}
 
 	_, e := database.GetForumBySlug(slug)
 	if e == database.ForumNotFound {

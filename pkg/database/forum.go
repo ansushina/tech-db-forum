@@ -2,7 +2,6 @@ package database
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/ansushina/tech-db-forum/app/models"
 )
@@ -28,7 +27,7 @@ func CreateForum(forum models.Forum) (models.Forum, error) {
 		forum.User,
 	).Scan(&nick)
 	forum.User = nick
-	fmt.Println(nick)
+	//fmt.Println(nick)
 
 	switch ErrorCode(err) {
 	case pgxOK:

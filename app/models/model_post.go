@@ -39,4 +39,6 @@ type Post struct {
 
 	// Дата создания сообщения на форуме.
 	Created time.Time `json:"created,omitempty"`
+
+	Path []int64 `json:"-"`
 }

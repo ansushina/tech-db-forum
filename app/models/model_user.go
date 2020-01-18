@@ -11,6 +11,7 @@ package models
 
 // Информация о пользователе.
 type User struct {
+	Id int `json:"id,omitempty"`
 
 	// Имя пользователя (уникальное поле). Данное поле допускает только латиницу, цифры и знак подчеркивания. Сравнение имени регистронезависимо.
 	Nickname string `json:"nickname,omitempty"`

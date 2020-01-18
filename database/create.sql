@@ -41,7 +41,8 @@ CREATE TABLE posts (
   "isEdited" BOOLEAN        DEFAULT FALSE,
   "message"  TEXT           NOT NULL,
   "parent"   INT        DEFAULT 0,
-  "thread"   INT       NOT NULL REFERENCES threads ("id")
+  "thread"   INT       NOT NULL REFERENCES threads ("id"),
+  "path"     BIGINT []  
 );
 
 CREATE TABLE votes (
@@ -139,3 +140,17 @@ END;
 $add_forum_user$
 LANGUAGE plpgsql;
 CREATE TRIGGER add_forum_user AFTER INSERT ON threads FOR EACH ROW EXECUTE PROCEDURE add_forum_user();
+
+
+DROP FUNCTION IF EXISTS thread_insert();
+CREATE OR REPLACE FUNCTION thread_insert() RETURNS trigger AS $thread_insert$
+BEGIN
+  UPDATE forums
+  SET threads = threads + 1 
+  WHERE slug = NEW.forum;
+  RETURN NULL;
+END;
+$thread_insert$ LANGUAGE plpgsql;
+DROP trigger if exists thread_insert ON threads;
+CREATE TRIGGER thread_insert AFTER INSERT ON threads
+  FOR EACH ROW EXECUTE PROCEDURE thread_insert();

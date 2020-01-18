@@ -2,7 +2,6 @@ package database
 
 import (
 	"errors"
-	"log"
 
 	"github.com/ansushina/tech-db-forum/app/models"
 )
@@ -25,7 +24,7 @@ func DatabaseStatus() (models.Status, error) {
 		" CROSS JOIN (SELECT count(nickname) FROM users) as fu")
 	defer res.Close()
 
-	log.Print(err)
+	//log.Print(err)
 
 	if err != nil {
 		return models.Status{}, errors.New("cant get db statisics")

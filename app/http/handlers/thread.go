@@ -1,9 +1,7 @@
 package handlers
 
 import (
-	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strconv"
 
@@ -36,7 +34,7 @@ func ThreadCreate(w http.ResponseWriter, r *http.Request) {
 
 	if t.Slug != "" {
 		existing, existErr := database.GetThreadBySlug(t.Slug)
-		fmt.Println(existing)
+		//fmt.Println(existing)
 		if existErr == nil {
 			WriteResponse(w, http.StatusConflict, existing)
 			return
@@ -83,7 +81,14 @@ func ThreadGetPosts(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
 	limit := query.Get("limit")
 	since := query.Get("since")
-	desc, _ := strconv.ParseBool(query.Get("desc"))
+	sort := query.Get("sort")
+	if sort == "" {
+		sort = "flat"
+	}
+	desc := query.Get("desc")
+	if desc == "" {
+		desc = "false"
+	}
 
 	th, e := database.GetThreadBySlug(slug)
 	if e == database.ThreadNotFound {
@@ -95,8 +100,8 @@ func ThreadGetPosts(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	res, err := database.GetThreadPosts(strconv.Itoa(th.Id), limit, since, desc)
-	log.Print(res)
+	res, err := database.GetThreadPosts(strconv.Itoa(th.Id), limit, since, sort, desc)
+	//log.Print(res)
 
 	if err == database.ThreadNotFound {
 		WriteErrorResponse(w, http.StatusNotFound, "Can't find thread with slug "+slug)

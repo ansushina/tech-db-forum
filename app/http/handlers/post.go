@@ -63,38 +63,51 @@ func PostUpdate(w http.ResponseWriter, r *http.Request) {
 
 func PostsCreate(w http.ResponseWriter, r *http.Request) {
 	slug, _ := checkVar("slug", r)
+	//log.Print("1")
 
 	p := models.Posts{}
 	body, _ := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
+	//log.Print("2")
 
 	_ = p.UnmarshalJSON(body)
+	//log.Print(p)
 	if len(p) == 0 {
-		WriteResponse(w, http.StatusCreated, p)
+		l := models.Threads{}
+		WriteResponse(w, http.StatusCreated, l)
 		return
 	}
+	//log.Print("3")
 
-	th, err := database.GetThreadBySlug(slug)
+	_, err := database.GetThreadBySlug(slug)
 
 	if err != nil {
 		WriteErrorResponse(w, http.StatusNotFound, "Can't find thread with slug "+slug)
 		return
 	}
+	//log.Print("4")
 	_, err = database.GetUserInfo(p[0].Author)
 	if err != nil {
 		WriteErrorResponse(w, http.StatusNotFound, "Can't find user with nickname "+p[0].Author)
 		return
 	}
 
-	for _, value := range p {
+	res, e := database.CreateThreadPost(&p, slug)
+	if e != nil {
+		WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	/*for _, value := range p {
 		value.Thread = th.Id
 		value.Forum = th.Forum
-		_, err = database.CreateThreadPost(slug, value)
+		//log.Print(value)
+		_, err = database.CreateThreadPost(value, slug)
 		if err != nil {
 			WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-	}
+	}*/
 
-	WriteResponse(w, http.StatusCreated, p)
+	//log.Print('6')
+	WriteResponse(w, http.StatusCreated, *res)
 }

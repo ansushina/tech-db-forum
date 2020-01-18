@@ -36,6 +36,8 @@ func easyjson38520a27DecodeGithubComAnsushinaTechDbForumAppModels(in *jlexer.Lex
 			continue
 		}
 		switch key {
+		case "id":
+			out.Id = int(in.Int())
 		case "nickname":
 			out.Nickname = string(in.String())
 		case "fullname":
@@ -58,10 +60,20 @@ func easyjson38520a27EncodeGithubComAnsushinaTechDbForumAppModels(out *jwriter.W
 	out.RawByte('{')
 	first := true
 	_ = first
-	if in.Nickname != "" {
-		const prefix string = ",\"nickname\":"
+	if in.Id != 0 {
+		const prefix string = ",\"id\":"
 		first = false
 		out.RawString(prefix[1:])
+		out.Int(int(in.Id))
+	}
+	if in.Nickname != "" {
+		const prefix string = ",\"nickname\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
 		out.String(string(in.Nickname))
 	}
 	{

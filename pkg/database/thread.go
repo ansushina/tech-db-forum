@@ -59,17 +59,39 @@ func GetThreadBySlug(param string) (models.Thread, error) {
 }
 
 func UpdateThreadBySlugorId(param string, t models.Thread) (models.Thread, error) {
-	queryString := " update threads set title = " + t.Title + "message = " + t.Message
-	if isNumber(param) {
-		queryString += " where id = " + param + " "
-	} else {
-		queryString += " where LOWER(slug) = LOWER('" + param + "') "
+	threadFound, err := GetThreadBySlug(param)
+	if err != nil {
+		return models.Thread{}, PostNotFound
 	}
-	queryString += "RETURNING id, slug, title, message, author"
 
-	row := DB.DBPool.QueryRow(queryString)
-	_ = row.Scan(&t.Id, &t.Slug, &t.Title, &t.Message, &t.Author)
-	return t, nil
+	updatedThread := models.Thread{}
+
+	err = DB.DBPool.QueryRow(`
+			UPDATE threads
+			SET title = coalesce(nullif($2, ''), title),
+				message = coalesce(nullif($3, ''), message)
+			WHERE slug = $1
+			RETURNING id, title, author, forum, message, votes, slug, created
+		`,
+		&threadFound.Slug,
+		&t.Title,
+		&t.Message,
+	).Scan(
+		&updatedThread.Id,
+		&updatedThread.Title,
+		&updatedThread.Author,
+		&updatedThread.Forum,
+		&updatedThread.Message,
+		&updatedThread.Votes,
+		&updatedThread.Slug,
+		&updatedThread.Created,
+	)
+
+	if err != nil {
+		return models.Thread{}, err
+	}
+
+	return updatedThread, nil
 }
 
 func VoteForThread(param string, vote models.Vote) (models.Thread, error) {

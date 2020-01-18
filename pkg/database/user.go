@@ -2,7 +2,6 @@ package database
 
 import (
 	"errors"
-	"log"
 
 	"github.com/ansushina/tech-db-forum/app/models"
 	"github.com/jackc/pgx"
@@ -32,7 +31,7 @@ func CreateUser(user models.User) (models.User, error) {
 		return user, nil
 	case pgxErrUnique:
 		f, _ := GetUserByEmail(user.Email)
-		log.Print(f)
+		//log.Print(f)
 		return f, UserIsExist
 	case pgxErrNotNull:
 		return models.User{}, UserNotFound
@@ -76,66 +75,98 @@ func GetUserInfo(nickname string) (models.User, error) {
 
 	return u, nil
 }
-func UpdateUser(u models.User) (models.User, error) {
-	query := "UPDATE users SET "
-	queryString := ""
-	if u.Email != "" {
-		queryString += "email = '" + u.Email + "'"
-		if u.About != "" || u.Fullname != "" {
-			queryString += ", "
-		}
-	}
-	if u.Fullname != "" {
-		queryString += "fullname = '" + u.Fullname + "'"
-		if u.About != "" {
-			queryString += ", "
-		}
-	}
-	if u.About != "" {
-		queryString += "About = '" + u.About + "'"
-	}
-	if queryString == "" {
-		err := DB.DBPool.QueryRow("select nickname, email, fullname, about from users where nickname = $1", u.Nickname).Scan(&u.Nickname, &u.Email, &u.Fullname, &u.About)
-		if err != nil {
-			return models.User{}, UserNotFound
-		}
-		return u, nil
-	}
-	queryString += `WHERE nickname = '` + u.Nickname + "' RETURNING nickname, email, fullname, about"
-	err := DB.DBPool.QueryRow(query+queryString).Scan(&u.Nickname, &u.Email, &u.Fullname, &u.About)
+func UpdateUser(user models.User) (models.User, error) {
+	err := DB.DBPool.QueryRow(
+		`
+			UPDATE users
+			SET fullname = coalesce(nullif($2, ''), fullname),
+				email = coalesce(nullif($3, ''), email),
+				about = coalesce(nullif($4, ''), about)
+			WHERE "nickname" = $1
+			RETURNING nickname, fullname, email, about
+		`,
+		&user.Nickname,
+		&user.Fullname,
+		&user.Email,
+		&user.About,
+	).Scan(
+		&user.Nickname,
+		&user.Fullname,
+		&user.Email,
+		&user.About,
+	)
+
 	if err != nil {
+		if ErrorCode(err) != pgxOK {
+			return models.User{}, errors.New("User update conflict")
+		}
 		return models.User{}, UserNotFound
 	}
-	return u, nil
+
+	return user, nil
 }
 
-func GetForumUsers(slug, limit, since string, desc bool) (models.Users, error) {
-	queryString := " SELECT nickname, fullname, about, email FROM users u join forum_users f on u.nickname = f.forum_user "
-	queryString += " where forum = '" + slug + "' "
+var queryForumUserWithSience = map[string]string{
+	"true": `
+		SELECT nickname, fullname, about, email
+		FROM users
+		WHERE nickname IN (
+				SELECT forum_user FROM forum_users WHERE forum = $1
+			) 
+			AND LOWER(nickname) < LOWER($2::TEXT)
+		ORDER BY nickname DESC
+		LIMIT $3::TEXT::INTEGER
+	`,
+	"false": `
+		SELECT nickname, fullname, about, email
+		FROM users
+		WHERE nickname IN (
+				SELECT forum_user FROM forum_users WHERE forum = $1
+			) 
+			AND LOWER(nickname) > LOWER($2::TEXT)
+		ORDER BY nickname
+		LIMIT $3::TEXT::INTEGER
+	`,
+}
 
-	if since != "" {
-		queryString += " AND u.id > " + since + " "
-	}
-	queryString += " order by id "
-	if desc {
-		queryString += " DESC "
-	}
+var queryForumUserNoSience = map[string]string{
+	"true": `
+		SELECT nickname, fullname, about, email
+		FROM users
+		WHERE nickname IN (
+				SELECT forum_user FROM forum_users WHERE forum = $1
+			)
+		ORDER BY nickname DESC
+		LIMIT $2::TEXT::INTEGER
+	`,
+	"false": `
+		SELECT nickname, fullname, about, email
+		FROM users
+		WHERE nickname IN (
+				SELECT forum_user FROM forum_users WHERE forum = $1
+			)
+		ORDER BY LOWER(nickname)
+		LIMIT $2::TEXT::INTEGER
+	`,
+}
 
-	if limit != "" {
-		queryString += " limit " + limit
-	}
-
-	log.Print(queryString)
+// /forum/{slug}/users Пользователи данного форума
+func GetForumUsers(slug, limit, since, desc string) (*models.Users, error) {
 	var rows *pgx.Rows
 	var err error
-	rows, err = DB.DBPool.Query(queryString)
+
+	if since != "" {
+		rows, err = DB.DBPool.Query(queryForumUserWithSience[desc], slug, since, limit)
+	} else {
+		rows, err = DB.DBPool.Query(queryForumUserNoSience[desc], slug, limit)
+	}
+	defer rows.Close()
 
 	if err != nil {
-		return models.Users{}, err
+		return nil, ForumNotFound
 	}
 
 	users := models.Users{}
-
 	for rows.Next() {
 		u := models.User{}
 		err = rows.Scan(
@@ -148,11 +179,10 @@ func GetForumUsers(slug, limit, since string, desc bool) (models.Users, error) {
 	}
 
 	if len(users) == 0 {
-		//_, err := GetForumBySlug(slug)
-		//if err != nil {
-		//	return models.Users{}, ForumNotFound
-		//}
+		_, err := GetForumBySlug(slug)
+		if err != nil {
+			return nil, ForumNotFound
+		}
 	}
-	return users, nil
-
+	return &users, nil
 }

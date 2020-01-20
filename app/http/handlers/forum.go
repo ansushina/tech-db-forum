@@ -96,6 +96,9 @@ func ForumGetUsers(w http.ResponseWriter, r *http.Request) {
 	slug, _ := checkVar("slug", r)
 	query := r.URL.Query()
 	limit := query.Get("limit")
+	if limit == "" {
+		limit = "100"
+	}
 	since := query.Get("since")
 	//fmt.Println(since)
 	desc := query.Get("desc")

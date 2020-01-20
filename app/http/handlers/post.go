@@ -2,8 +2,10 @@ package handlers
 
 import (
 	"io/ioutil"
+	"log"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/ansushina/tech-db-forum/app/models"
 	"github.com/ansushina/tech-db-forum/pkg/database"
@@ -11,9 +13,12 @@ import (
 
 func PostGetOne(w http.ResponseWriter, r *http.Request) {
 	id_str, _ := checkVar("id", r)
-	id, _ := strconv.Atoi(id_str)
 
-	res, err := database.GetPostById(id)
+	id, _ := strconv.Atoi(id_str)
+	query := r.URL.Query()
+	related := strings.Split(query.Get("related"), ",")
+
+	res, err := database.GetPostFull(id, related)
 
 	switch err {
 	case nil:
@@ -72,11 +77,7 @@ func PostsCreate(w http.ResponseWriter, r *http.Request) {
 
 	_ = p.UnmarshalJSON(body)
 	//log.Print(p)
-	if len(p) == 0 {
-		l := models.Threads{}
-		WriteResponse(w, http.StatusCreated, l)
-		return
-	}
+
 	//log.Print("3")
 
 	_, err := database.GetThreadBySlug(slug)
@@ -85,6 +86,13 @@ func PostsCreate(w http.ResponseWriter, r *http.Request) {
 		WriteErrorResponse(w, http.StatusNotFound, "Can't find thread with slug "+slug)
 		return
 	}
+
+	if len(p) == 0 {
+		l := models.Threads{}
+		WriteResponse(w, http.StatusCreated, l)
+		return
+	}
+
 	//log.Print("4")
 	_, err = database.GetUserInfo(p[0].Author)
 	if err != nil {
@@ -93,9 +101,14 @@ func PostsCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	res, e := database.CreateThreadPost(&p, slug)
-	if e != nil {
-		WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+	if e == database.ParentNotExist {
+		WriteErrorResponse(w, http.StatusConflict, e.Error())
 		return
+	} else if e != nil {
+		WriteErrorResponse(w, http.StatusInternalServerError, e.Error())
+		return
+	} else if res == nil {
+		WriteResponse(w, http.StatusCreated, nil)
 	}
 	/*for _, value := range p {
 		value.Thread = th.Id
@@ -109,5 +122,9 @@ func PostsCreate(w http.ResponseWriter, r *http.Request) {
 	}*/
 
 	//log.Print('6')
+	if res == nil {
+		log.Print("help")
+		WriteResponse(w, http.StatusCreated, nil)
+	}
 	WriteResponse(w, http.StatusCreated, *res)
 }

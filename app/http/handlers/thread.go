@@ -122,6 +122,13 @@ func ThreadUpdate(w http.ResponseWriter, r *http.Request) {
 	_ = t.UnmarshalJSON(body)
 	slug, _ := checkVar("slug", r)
 
+	_, err := database.GetThreadBySlug(slug)
+
+	if err != nil {
+		WriteErrorResponse(w, http.StatusNotFound, "Can't find thread with slug "+slug)
+		return
+	}
+
 	res, err := database.UpdateThreadBySlugorId(slug, t)
 
 	switch err {
@@ -147,6 +154,19 @@ func ThreadVote(w http.ResponseWriter, r *http.Request) {
 
 	_ = v.UnmarshalJSON(body)
 	slug, _ := checkVar("slug", r)
+
+	_, err := database.GetThreadBySlug(slug)
+
+	if err != nil {
+		WriteErrorResponse(w, http.StatusNotFound, "Can't find thread with slug "+slug)
+		return
+	}
+
+	_, err = database.GetUserInfo(v.Nickname)
+	if err != nil {
+		WriteErrorResponse(w, http.StatusNotFound, "Can't find user with nickname "+v.Nickname)
+		return
+	}
 
 	res, err := database.VoteForThread(slug, v)
 

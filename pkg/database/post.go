@@ -3,6 +3,7 @@ package database
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -11,8 +12,9 @@ import (
 )
 
 var (
-	PostIsExist  = errors.New("Post is already exist")
-	PostNotFound = errors.New("Post not found")
+	PostIsExist    = errors.New("Post is already exist")
+	PostNotFound   = errors.New("Post not found")
+	ParentNotExist = errors.New("post parent not exist")
 )
 
 func GetPostById(id int) (models.Post, error) {
@@ -35,20 +37,57 @@ func GetPostById(id int) (models.Post, error) {
 
 	return p, nil
 }
+
+func GetPostFull(id int, related []string) (*models.PostFull, error) {
+	postFull := models.PostFull{}
+	var err error
+	postFull.Post = &models.Post{}
+
+	*postFull.Post, err = GetPostById(id)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, obj := range related {
+		switch obj {
+		case "user":
+			postFull.Author = &models.User{}
+			*postFull.Author, err = GetUserInfo(postFull.Post.Author)
+		case "forum":
+			postFull.Forum = &models.Forum{}
+			*postFull.Forum, err = GetForumBySlug(postFull.Post.Forum)
+		case "thread":
+			postFull.Thread = &models.Thread{}
+			*postFull.Thread, err = GetThreadBySlug(strconv.Itoa(postFull.Post.Thread))
+		}
+
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &postFull, nil
+}
+
 func UpdatePost(p models.Post) (models.Post, error) {
-	err := DB.DBPool.QueryRow(
-		`UPDATE posts SET message = $2, "isEdited" = 'true' 
-		WHERE id = $1
-		returning id, author`,
-		&p.Id,
-		&p.Message,
-	).Scan(&p.Id, &p.Author)
+	post, e := GetPostById(p.Id)
+	if e != nil {
+		return models.Post{}, e
+	}
+
+	if len(p.Message) == 0 {
+		return post, nil
+	}
+	err := DB.DBPool.QueryRow(`UPDATE posts SET message = COALESCE($1, message),
+	"isEdited" = ($1 IS NOT NULL AND $1 <> message) WHERE id = $2
+	RETURNING id, parent, author, message, "isEdited", forum, thread, created`, &p.Message, p.Id).Scan(&post.Id,
+		&post.Parent, &post.Author, &post.Message, &post.IsEdited, &post.Forum, &post.Thread, &post.Created)
 	//log.Print(err)
 	if err != nil {
 		return models.Post{}, PostNotFound
 	}
 	p.IsEdited = true
-	return p, nil
+	return post, nil
 }
 
 func authorExists(nickname string) bool {
@@ -108,7 +147,7 @@ func checkPost(p *models.Post, t *models.Thread) error {
 		return UserNotFound
 	}
 	if parentExitsInOtherThread(p.Parent, t.Id) || parentNotExists(p.Parent) {
-		return errors.New("post parent not exist")
+		return ParentNotExist
 	}
 	return nil
 }

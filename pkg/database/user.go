@@ -2,6 +2,7 @@ package database
 
 import (
 	"errors"
+	"log"
 
 	"github.com/ansushina/tech-db-forum/app/models"
 	"github.com/jackc/pgx"
@@ -113,8 +114,8 @@ var queryForumUserWithSience = map[string]string{
 		WHERE nickname IN (
 				SELECT forum_user FROM forum_users WHERE forum = $1
 			) 
-			AND LOWER(nickname) < LOWER($2::TEXT)
-		ORDER BY nickname DESC
+			AND LOWER(nickname) < LOWER($2::TEXT) COLLATE "POSIX"
+		ORDER BY nickname  COLLATE "POSIX" DESC
 		LIMIT $3::TEXT::INTEGER
 	`,
 	"false": `
@@ -123,8 +124,8 @@ var queryForumUserWithSience = map[string]string{
 		WHERE nickname IN (
 				SELECT forum_user FROM forum_users WHERE forum = $1
 			) 
-			AND LOWER(nickname) > LOWER($2::TEXT)
-		ORDER BY nickname
+			AND LOWER(nickname) > LOWER($2::TEXT) COLLATE "POSIX"
+		ORDER BY nickname  COLLATE "POSIX"
 		LIMIT $3::TEXT::INTEGER
 	`,
 }
@@ -136,7 +137,7 @@ var queryForumUserNoSience = map[string]string{
 		WHERE nickname IN (
 				SELECT forum_user FROM forum_users WHERE forum = $1
 			)
-		ORDER BY nickname DESC
+		ORDER BY nickname  COLLATE "POSIX" DESC
 		LIMIT $2::TEXT::INTEGER
 	`,
 	"false": `
@@ -145,7 +146,7 @@ var queryForumUserNoSience = map[string]string{
 		WHERE nickname IN (
 				SELECT forum_user FROM forum_users WHERE forum = $1
 			)
-		ORDER BY LOWER(nickname)
+		ORDER BY nickname  COLLATE "POSIX"
 		LIMIT $2::TEXT::INTEGER
 	`,
 }
@@ -158,6 +159,7 @@ func GetForumUsers(slug, limit, since, desc string) (*models.Users, error) {
 	if since != "" {
 		rows, err = DB.DBPool.Query(queryForumUserWithSience[desc], slug, since, limit)
 	} else {
+		log.Print(queryForumUserNoSience[desc], slug, limit)
 		rows, err = DB.DBPool.Query(queryForumUserNoSience[desc], slug, limit)
 	}
 	defer rows.Close()

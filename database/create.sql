@@ -1,4 +1,6 @@
 
+CREATE EXTENSION IF NOT EXISTS citext;
+
 DROP TABLE IF EXISTS forums CASCADE;
 DROP TABLE IF EXISTS posts CASCADE;
 DROP TABLE IF EXISTS threads CASCADE;
@@ -8,36 +10,36 @@ DROP TABLE IF EXISTS forum_users CASCADE;
 
 CREATE TABLE users (
   "id"       SERIAL UNIQUE,
-  "nickname" TEXT UNIQUE PRIMARY KEY,
-  "fullname" TEXT NOT NULL,
+  "nickname" CITEXT UNIQUE PRIMARY KEY,
+  "fullname" CITEXT NOT NULL,
   "about"    TEXT,
   "email"    TEXT UNIQUE NOT NULL
 );
 
 CREATE TABLE forums (
   "title"   TEXT    NOT NULL,
-  "user"    TEXT    NOT NULL REFERENCES users ("nickname"),
-  "slug"    TEXT    UNIQUE NOT NULL,
+  "user"    CITEXT    NOT NULL REFERENCES users ("nickname"),
+  "slug"    CITEXT    UNIQUE NOT NULL,
   "posts"   BIGINT  DEFAULT 0,
   "threads" INTEGER DEFAULT 0
 );
 
 CREATE TABLE threads (
   "id"      SERIAL         UNIQUE PRIMARY KEY,
-  "author"  TEXT           NOT NULL REFERENCES users ("nickname"),
+  "author"  CITEXT           NOT NULL REFERENCES users ("nickname"),
   "created" TIMESTAMPTZ(3) DEFAULT now(),
-  "forum"   TEXT           NOT NULL REFERENCES forums ("slug"),
+  "forum"   CITEXT           NOT NULL REFERENCES forums ("slug"),
   "message" TEXT           NOT NULL,
-  "slug"    TEXT,
+  "slug"    CITEXT,
   "title"   TEXT           NOT NULL,
   "votes"   INTEGER        DEFAULT 0
 ); 
 
 CREATE TABLE posts (
   "id"       BIGSERIAL      UNIQUE PRIMARY KEY,
-  "author"   TEXT           NOT NULL REFERENCES users ("nickname"),
+  "author"   CITEXT           NOT NULL REFERENCES users ("nickname"),
   "created"  TIMESTAMPTZ(3) DEFAULT now(),
-  "forum"    TEXT           NOT NULL REFERENCES forums ("slug"),
+  "forum"    CITEXT           NOT NULL REFERENCES forums ("slug"),
   "isEdited" BOOLEAN        DEFAULT FALSE,
   "message"  TEXT           NOT NULL,
   "parent"   INT        DEFAULT 0,
@@ -48,13 +50,13 @@ CREATE TABLE posts (
 CREATE TABLE votes (
   "thread"   INT NOT NULL REFERENCES threads("id"),
   "voice"    INTEGER NOT NULL,
-  "nickname" TEXT   NOT NULL
+  "nickname" CITEXT   NOT NULL
 );
 
 CREATE TABLE forum_users
 (
-  "forum_user"  TEXT COLLATE ucs_basic NOT NULL,
-  "forum"       TEXT NOT NULL
+  "forum_user"  CITEXT COLLATE ucs_basic NOT NULL,
+  "forum"       CITEXT NOT NULL
 );
 
 
@@ -79,6 +81,7 @@ DROP INDEX IF EXISTS idx_posts_paths;
 DROP INDEX IF EXISTS idx_posts_thread_path;
 DROP INDEX IF EXISTS idx_posts_thread_id_created;
 DROP INDEX IF EXISTS idx_votes_thread_nickname;
+DROP INDEX IF EXISTS  idx_posts_thread_path1_id;
 
 DROP INDEX IF EXISTS idx_fu_user;
 DROP INDEX IF EXISTS idx_fu_forum;
@@ -102,6 +105,9 @@ CREATE INDEX IF NOT EXISTS idx_posts_thread_id_created ON posts (id, created, th
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_votes_thread_nickname ON votes (thread, nickname);
 
+
+CREATE INDEX IF NOT EXISTS idx_posts_thread_path ON posts (thread, path);
+CREATE INDEX IF NOT EXISTS idx_posts_thread_path1_id ON posts (thread, (path[1]), id);
 
 DROP FUNCTION IF EXISTS insert_vote();
 CREATE OR REPLACE FUNCTION insert_vote() RETURNS TRIGGER AS $insert_vote$

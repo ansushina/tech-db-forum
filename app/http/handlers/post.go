@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -13,8 +12,8 @@ import (
 
 func PostGetOne(w http.ResponseWriter, r *http.Request) {
 	id_str, _ := checkVar("id", r)
-
 	id, _ := strconv.Atoi(id_str)
+
 	query := r.URL.Query()
 	related := strings.Split(query.Get("related"), ",")
 
@@ -68,17 +67,12 @@ func PostUpdate(w http.ResponseWriter, r *http.Request) {
 
 func PostsCreate(w http.ResponseWriter, r *http.Request) {
 	slug, _ := checkVar("slug", r)
-	//log.Print("1")
 
 	p := models.Posts{}
 	body, _ := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
-	//log.Print("2")
 
 	_ = p.UnmarshalJSON(body)
-	//log.Print(p)
-
-	//log.Print("3")
 
 	_, err := database.GetThreadBySlug(slug)
 
@@ -93,7 +87,6 @@ func PostsCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//log.Print("4")
 	_, err = database.GetUserInfo(p[0].Author)
 	if err != nil {
 		WriteErrorResponse(w, http.StatusNotFound, "Can't find user with nickname "+p[0].Author)
@@ -107,24 +100,7 @@ func PostsCreate(w http.ResponseWriter, r *http.Request) {
 	} else if e != nil {
 		WriteErrorResponse(w, http.StatusInternalServerError, e.Error())
 		return
-	} else if res == nil {
-		WriteResponse(w, http.StatusCreated, nil)
 	}
-	/*for _, value := range p {
-		value.Thread = th.Id
-		value.Forum = th.Forum
-		//log.Print(value)
-		_, err = database.CreateThreadPost(value, slug)
-		if err != nil {
-			WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-			return
-		}
-	}*/
 
-	//log.Print('6')
-	if res == nil {
-		log.Print("help")
-		WriteResponse(w, http.StatusCreated, nil)
-	}
 	WriteResponse(w, http.StatusCreated, *res)
 }

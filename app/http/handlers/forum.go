@@ -17,8 +17,6 @@ func ForumCreate(w http.ResponseWriter, r *http.Request) {
 
 	_ = f.UnmarshalJSON(body)
 
-	//log.Print(f)
-
 	_, err := database.GetUserInfo(f.User)
 	if err != nil {
 		WriteErrorResponse(w, http.StatusNotFound, "Can't find user with nickname "+f.User)
@@ -43,7 +41,6 @@ func ForumCreate(w http.ResponseWriter, r *http.Request) {
 
 func ForumGetOne(w http.ResponseWriter, r *http.Request) {
 	slug, _ := checkVar("slug", r)
-	//log.Print(slug)
 
 	f, err := database.GetForumBySlug(slug)
 	switch err {
@@ -63,7 +60,6 @@ func ForumGetOne(w http.ResponseWriter, r *http.Request) {
 }
 
 func ForumGetThreads(w http.ResponseWriter, r *http.Request) {
-
 	slug, _ := checkVar("slug", r)
 	query := r.URL.Query()
 	since := query.Get("since")
@@ -81,10 +77,7 @@ func ForumGetThreads(w http.ResponseWriter, r *http.Request) {
 
 	res, err := database.GetForumThreads(slug, limit, since, desc)
 
-	if err == database.ForumNotFound {
-		WriteErrorResponse(w, http.StatusNotFound, "Can't find forum with slug"+slug)
-		return
-	} else if err != nil {
+	if err != nil {
 		WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -100,7 +93,6 @@ func ForumGetUsers(w http.ResponseWriter, r *http.Request) {
 		limit = "100"
 	}
 	since := query.Get("since")
-	//fmt.Println(since)
 	desc := query.Get("desc")
 	if desc == "" {
 		desc = "false"
@@ -117,10 +109,7 @@ func ForumGetUsers(w http.ResponseWriter, r *http.Request) {
 
 	res, err := database.GetForumUsers(slug, limit, since, desc)
 
-	if err == database.ForumNotFound {
-		WriteErrorResponse(w, http.StatusNotFound, "Can't find forum with slug"+slug)
-		return
-	} else if err != nil {
+	if err != nil {
 		WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}

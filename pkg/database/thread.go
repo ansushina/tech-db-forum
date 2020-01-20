@@ -2,7 +2,6 @@ package database
 
 import (
 	"errors"
-	"log"
 	"strconv"
 
 	"github.com/ansushina/tech-db-forum/app/models"
@@ -181,11 +180,10 @@ func GetForumThreads(slug, limit, since string, desc bool) (models.Threads, erro
 		queryString += " limit " + limit
 	}
 
-	log.Print(queryString)
+	//log.Print(queryString)
 	var rows *pgx.Rows
 	var err error
 	rows, err = DB.DBPool.Query(queryString)
-	//fmt.Println(err)
 
 	if err != nil {
 		return models.Threads{}, err
@@ -208,12 +206,6 @@ func GetForumThreads(slug, limit, since string, desc bool) (models.Threads, erro
 		threads = append(threads, &t)
 	}
 
-	if len(threads) == 0 {
-		//_, err := GetForumBySlug(slug)
-		//if err != nil {
-		//	return models.Threads{}, ForumNotFound
-		//}
-	}
 	return threads, nil
 }
 

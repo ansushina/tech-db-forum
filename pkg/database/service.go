@@ -24,8 +24,6 @@ func DatabaseStatus() (models.Status, error) {
 		" CROSS JOIN (SELECT count(nickname) FROM users) as fu")
 	defer res.Close()
 
-	//log.Print(err)
-
 	if err != nil {
 		return models.Status{}, errors.New("cant get db statisics")
 	}

@@ -14,8 +14,6 @@ type errorResponse struct {
 }
 
 func checkVar(varName string, req *http.Request) (string, error) {
-	//log.Print(varName)
-	//requestVariables := pat.Param(req, varName)
 	vars := mux.Vars(req)
 	return vars[varName], nil
 }

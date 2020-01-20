@@ -2,7 +2,6 @@ package database
 
 import (
 	"errors"
-	"log"
 
 	"github.com/ansushina/tech-db-forum/app/models"
 	"github.com/jackc/pgx"
@@ -32,7 +31,6 @@ func CreateUser(user models.User) (models.User, error) {
 		return user, nil
 	case pgxErrUnique:
 		f, _ := GetUserByEmail(user.Email)
-		//log.Print(f)
 		return f, UserIsExist
 	case pgxErrNotNull:
 		return models.User{}, UserNotFound
@@ -159,7 +157,6 @@ func GetForumUsers(slug, limit, since, desc string) (*models.Users, error) {
 	if since != "" {
 		rows, err = DB.DBPool.Query(queryForumUserWithSience[desc], slug, since, limit)
 	} else {
-		log.Print(queryForumUserNoSience[desc], slug, limit)
 		rows, err = DB.DBPool.Query(queryForumUserNoSience[desc], slug, limit)
 	}
 	defer rows.Close()

@@ -82,7 +82,6 @@ func UpdatePost(p models.Post) (models.Post, error) {
 	"isEdited" = ($1 IS NOT NULL AND $1 <> message) WHERE id = $2
 	RETURNING id, parent, author, message, "isEdited", forum, thread, created`, &p.Message, p.Id).Scan(&post.Id,
 		&post.Parent, &post.Author, &post.Message, &post.IsEdited, &post.Forum, &post.Thread, &post.Created)
-	//log.Print(err)
 	if err != nil {
 		return models.Post{}, PostNotFound
 	}
@@ -152,7 +151,6 @@ func checkPost(p *models.Post, t *models.Thread) error {
 	return nil
 }
 
-// thread/{slug_or_id}/create Создание новых постов
 func CreateThreadPost(posts *models.Posts, param string) (*models.Posts, error) {
 	thread, err := GetThreadBySlug(param)
 	if err != nil {
@@ -176,7 +174,6 @@ func CreateThreadPost(posts *models.Posts, param string) (*models.Posts, error) 
 		}
 
 		temp := fmt.Sprintf(queryBody, post.Author, created, post.Message, thread.Id, post.Parent, thread.Forum, post.Parent)
-		// удаление запятой в конце queryBody для последнего подзапроса
 		if i == postsNumber-1 {
 			temp = temp[:len(temp)-1]
 		}
@@ -214,7 +211,6 @@ func CreateThreadPost(posts *models.Posts, param string) (*models.Posts, error) 
 		return nil, err
 	}
 
-	// по хорошему это впихнуть в хранимые процедуры, но нормальные ребята предпочитают костылить
 	tx.Exec(`UPDATE forums SET posts = posts + $1 WHERE slug = $2`, len(insertPosts), thread.Forum)
 	for _, p := range insertPosts {
 		tx.Exec(`INSERT INTO forum_users VALUES ($1, $2) ON CONFLICT DO NOTHING`, p.Author, p.Forum)
@@ -344,7 +340,6 @@ var queryPostsNoSience = map[string]map[string]string{
 	},
 }
 
-// /thread/{slug_or_id}/posts Сообщения данной ветви обсуждения
 func GetThreadPosts(param, limit, since, sort, desc string) (*models.Posts, error) {
 	thread, err := GetThreadBySlug(param)
 	if err != nil {

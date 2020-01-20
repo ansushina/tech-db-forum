@@ -34,7 +34,6 @@ func ThreadCreate(w http.ResponseWriter, r *http.Request) {
 
 	if t.Slug != "" {
 		existing, existErr := database.GetThreadBySlug(t.Slug)
-		//fmt.Println(existing)
 		if existErr == nil {
 			WriteResponse(w, http.StatusConflict, existing)
 			return
@@ -101,7 +100,6 @@ func ThreadGetPosts(w http.ResponseWriter, r *http.Request) {
 	}
 
 	res, err := database.GetThreadPosts(strconv.Itoa(th.Id), limit, since, sort, desc)
-	//log.Print(res)
 
 	if err == database.ThreadNotFound {
 		WriteErrorResponse(w, http.StatusNotFound, "Can't find thread with slug "+slug)

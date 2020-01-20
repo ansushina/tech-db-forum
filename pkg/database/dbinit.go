@@ -1,7 +1,6 @@
 package database
 
 import (
-	"errors"
 	"io/ioutil"
 	"log"
 	"strconv"
@@ -59,14 +58,6 @@ func CreateConn() (err error) {
 	tx.Commit()
 	log.Printf("tables created")
 
-	return nil
-}
-
-func (db *DataBase) Close() error {
-	if db.DBPool == nil {
-		return errors.New("no connection")
-	}
-	db.DBPool.Close()
 	return nil
 }
 

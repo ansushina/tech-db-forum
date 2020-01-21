@@ -60,31 +60,25 @@ CREATE TABLE forum_users
 );
 
 
-DROP INDEX IF EXISTS idx_users_nickname;
-DROP INDEX IF EXISTS idx_users_nickname_email;
-DROP INDEX IF EXISTS idx_forums_slug;
-DROP INDEX IF EXISTS idx_threads_id;
-DROP INDEX IF EXISTS idx_threads_slug;
-DROP INDEX IF EXISTS idx_threads_created_forum;
-DROP INDEX IF EXISTS idx_posts_id;
-DROP INDEX IF EXISTS idx_posts_thread_id;
-DROP INDEX IF EXISTS idx_posts_thread_id0;
-DROP INDEX IF EXISTS idx_posts_thread_path1_id;
-DROP INDEX IF EXISTS idx_posts_thread_path_parent;
-DROP INDEX IF EXISTS idx_posts_thread;
-DROP INDEX IF EXISTS idx_posts_path_AA;
-DROP INDEX IF EXISTS idx_posts_path_AD;
-DROP INDEX IF EXISTS idx_posts_path_DA;
-DROP INDEX IF EXISTS idx_posts_path_DD;
-DROP INDEX IF EXISTS idx_posts_path_desc;
-DROP INDEX IF EXISTS idx_posts_paths;
-DROP INDEX IF EXISTS idx_posts_thread_path;
-DROP INDEX IF EXISTS idx_posts_thread_id_created;
-DROP INDEX IF EXISTS idx_votes_thread_nickname;
-DROP INDEX IF EXISTS  idx_posts_thread_path1_id;
-
-DROP INDEX IF EXISTS idx_fu_user;
+DROP INDEX IF EXISTS  idx_fu_user;
 DROP INDEX IF EXISTS idx_fu_forum;
+
+DROP INDEX IF EXISTS idx_users_nickname;
+
+DROP INDEX IF EXISTS idx_forums_slug;
+
+DROP INDEX IF EXISTS  idx_threads_id;
+DROP INDEX IF EXISTS  idx_threads_slug;
+DROP INDEX IF EXISTS  idx_threads_forum;
+
+DROP INDEX IF EXISTS  idx_posts_forum;
+DROP INDEX IF EXISTS  idx_posts_id;
+DROP INDEX IF EXISTS idx_posts_thread_path;
+DROP INDEX IF EXISTS idx_posts_thread_id;
+DROP INDEX IF EXISTS  idx_posts_thread_id0 ;
+DROP INDEX IF EXISTS idx_posts_thread_id_created;
+DROP INDEX IF EXISTS idx_posts_thread_path1_id;
+DROP INDEX IF EXISTS  idx_votes_thread_nickname;
 
 CREATE INDEX IF NOT EXISTS idx_fu_user ON forum_users (forum, forum_user);
 CREATE INDEX IF NOT EXISTS idx_fu_forum ON forum_users (forum);
@@ -99,21 +93,13 @@ CREATE INDEX IF NOT EXISTS idx_threads_forum ON threads (forum);
 
 CREATE INDEX IF NOT EXISTS idx_posts_forum ON posts (forum);
 CREATE INDEX IF NOT EXISTS idx_posts_id ON posts (id);
+CREATE INDEX IF NOT EXISTS idx_posts_thread_path ON posts (thread, path);
 CREATE INDEX IF NOT EXISTS idx_posts_thread_id ON posts (thread, id);
 CREATE INDEX IF NOT EXISTS idx_posts_thread_id0 ON posts (thread, id) WHERE parent = 0;
 CREATE INDEX IF NOT EXISTS idx_posts_thread_id_created ON posts (id, created, thread);
-
-create index IF NOT EXISTS post__id_thread ON posts(id, thread);
-create index IF NOT EXISTS post__path__first ON Posts((path[1]));
-create index IF NOT EXISTS post_forum_author ON posts(forum, author);
-create index post_parent_thread_path_id ON Posts(thread, (path[1]), id) WHERE parent IS NUll;
-CREATE INDEX IF NOT EXISTS idx_sth ON Posts (lower(author));
+CREATE INDEX IF NOT EXISTS idx_posts_thread_path1_id ON posts (thread, (path[1]), id);
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_votes_thread_nickname ON votes (thread, nickname);
-
-
-CREATE INDEX IF NOT EXISTS idx_posts_thread_path ON posts (thread, path);
-CREATE INDEX IF NOT EXISTS idx_posts_thread_path1_id ON posts (thread, (path[1]), id);
 
 DROP FUNCTION IF EXISTS insert_vote();
 CREATE OR REPLACE FUNCTION insert_vote() RETURNS TRIGGER AS $insert_vote$

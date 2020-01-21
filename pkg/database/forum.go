@@ -27,7 +27,6 @@ func CreateForum(forum models.Forum) (models.Forum, error) {
 		forum.User,
 	).Scan(&nick)
 	forum.User = nick
-	//fmt.Println(nick)
 
 	switch ErrorCode(err) {
 	case pgxOK:

@@ -238,7 +238,7 @@ func CreateForumThread(t models.Thread) (models.Thread, error) {
 		return t, nil
 	case pgxErrUnique:
 		thread, _ := GetThreadBySlug(t.Slug)
-		return thread, ForumIsExist
+		return thread, ThreadIsExist
 	case pgxErrNotNull:
 		return models.Thread{}, UserNotFound
 	default:

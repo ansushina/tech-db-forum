@@ -343,7 +343,7 @@ var queryPostsNoSience = map[string]map[string]string{
 func GetThreadPosts(param, limit, since, sort, desc string) (*models.Posts, error) {
 	thread, err := GetThreadBySlug(param)
 	if err != nil {
-		return nil, ForumNotFound
+		return nil, ThreadNotFound
 	}
 
 	var rows *pgx.Rows

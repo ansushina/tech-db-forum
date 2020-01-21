@@ -10,9 +10,10 @@ import (
 var (
 	UserIsExist  = errors.New("User is already exist")
 	UserNotFound = errors.New("User not found")
+	UserConflict = errors.New("User conflict")
 )
 
-func CreateUser(user models.User) (models.User, error) {
+func CreateUser(user *models.User) (*models.Users, error) {
 
 	err := DB.DBPool.QueryRow(
 		`
@@ -26,23 +27,36 @@ func CreateUser(user models.User) (models.User, error) {
 		&user.Email,
 	).Scan(&user.Nickname)
 
-	switch ErrorCode(err) {
-	case pgxOK:
-		return user, nil
-	case pgxErrUnique:
-		f, _ := GetUserByEmail(user.Email)
-		return f, UserIsExist
-	case pgxErrNotNull:
-		return models.User{}, UserNotFound
-	default:
-		return models.User{}, err
+	if err != nil {
+		users := models.Users{}
+		queryRows, err := DB.DBPool.Query(`
+				SELECT "nickname", "fullname", "email", "about"
+				FROM users
+				WHERE "nickname" = $1 OR "email" = $2
+			`,
+			&user.Nickname,
+			&user.Email)
+		defer queryRows.Close()
+
+		if err != nil {
+			return nil, err
+		}
+
+		for queryRows.Next() {
+			user := models.User{}
+			queryRows.Scan(&user.Nickname, &user.Fullname, &user.Email, &user.About)
+			users = append(users, &user)
+		}
+		return &users, UserIsExist
 	}
+	return nil, nil
 }
+
 func GetUserByEmail(email string) (models.User, error) {
 	var u models.User
 	err := DB.DBPool.QueryRow(
 		`SELECT nickname, fullname, about, email 
-		FROM users WHERE LOWER(email) = LOWER($1)`,
+		FROM users WHERE email = $1`,
 		email,
 	).Scan(
 		&u.Nickname,
@@ -56,11 +70,12 @@ func GetUserByEmail(email string) (models.User, error) {
 
 	return u, nil
 }
+
 func GetUserInfo(nickname string) (models.User, error) {
 	var u models.User
 	err := DB.DBPool.QueryRow(
 		`SELECT nickname, fullname, about, email 
-		FROM users WHERE LOWER(nickname) = LOWER($1)`,
+		FROM users WHERE nickname = $1`,
 		nickname,
 	).Scan(
 		&u.Nickname,
@@ -97,7 +112,7 @@ func UpdateUser(user models.User) (models.User, error) {
 
 	if err != nil {
 		if ErrorCode(err) != pgxOK {
-			return models.User{}, errors.New("User update conflict")
+			return models.User{}, UserConflict
 		}
 		return models.User{}, UserNotFound
 	}
@@ -149,7 +164,6 @@ var queryForumUserNoSience = map[string]string{
 	`,
 }
 
-// /forum/{slug}/users Пользователи данного форума
 func GetForumUsers(slug, limit, since, desc string) (*models.Users, error) {
 	var rows *pgx.Rows
 	var err error

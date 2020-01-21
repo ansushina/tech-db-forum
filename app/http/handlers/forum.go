@@ -17,21 +17,14 @@ func ForumCreate(w http.ResponseWriter, r *http.Request) {
 
 	_ = f.UnmarshalJSON(body)
 
-	_, err := database.GetUserInfo(f.User)
-	if err != nil {
+	newForum, err := database.CreateForum(f)
+	if err == database.UserNotFound {
 		WriteErrorResponse(w, http.StatusNotFound, "Can't find user with nickname "+f.User)
 		return
-	}
-
-	existingForum, err := database.GetForumBySlug(f.Slug)
-	if err == nil {
-		WriteResponse(w, http.StatusConflict, existingForum)
+	} else if err == database.ForumIsExist {
+		WriteResponse(w, http.StatusConflict, newForum)
 		return
-	}
-
-	var newForum models.Forum
-	newForum, err = database.CreateForum(f)
-	if err != nil {
+	} else if err != nil {
 		WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -66,18 +59,12 @@ func ForumGetThreads(w http.ResponseWriter, r *http.Request) {
 	limit := query.Get("limit")
 	desc, _ := strconv.ParseBool(query.Get("desc"))
 
-	_, e := database.GetForumBySlug(slug)
-	if e == database.ForumNotFound {
-		WriteErrorResponse(w, http.StatusNotFound, "Can't find forum with slug"+slug)
-		return
-	} else if e != nil {
-		WriteErrorResponse(w, http.StatusInternalServerError, e.Error())
-		return
-	}
-
 	res, err := database.GetForumThreads(slug, limit, since, desc)
 
-	if err != nil {
+	if err == database.ForumNotFound {
+		WriteErrorResponse(w, http.StatusNotFound, err.Error())
+		return
+	} else if err != nil {
 		WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -98,18 +85,12 @@ func ForumGetUsers(w http.ResponseWriter, r *http.Request) {
 		desc = "false"
 	}
 
-	_, e := database.GetForumBySlug(slug)
-	if e == database.ForumNotFound {
-		WriteErrorResponse(w, http.StatusNotFound, "Can't find forum with slug"+slug)
-		return
-	} else if e != nil {
-		WriteErrorResponse(w, http.StatusInternalServerError, e.Error())
-		return
-	}
-
 	res, err := database.GetForumUsers(slug, limit, since, desc)
 
-	if err != nil {
+	if err == database.ForumNotFound {
+		WriteErrorResponse(w, http.StatusNotFound, err.Error())
+		return
+	} else if err != nil {
 		WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}

@@ -13,7 +13,7 @@ CREATE TABLE users (
   "nickname" CITEXT UNIQUE PRIMARY KEY,
   "fullname" CITEXT NOT NULL,
   "about"    TEXT,
-  "email"    TEXT UNIQUE NOT NULL
+  "email"    CITEXT UNIQUE NOT NULL
 );
 
 CREATE TABLE forums (

@@ -13,6 +13,52 @@ var (
 	ThreadNotFound = errors.New("Thread not found")
 )
 
+func CreateForumThread(t models.Thread) (models.Thread, error) {
+	if t.Slug != "" {
+		thread, err := GetThreadBySlug(t.Slug)
+		if err == nil {
+			return thread, ThreadIsExist
+		}
+	}
+
+	err := DB.DBPool.QueryRow(
+		`INSERT INTO threads (title, author, forum, message, slug, created) 
+		values ($1, (select nickname from users where nickname = $2), 
+			(select slug from forums where slug= $3), $4, $5, $6)
+		RETURNING id, title, author, forum, message, slug, created, votes
+		`,
+		t.Title,
+		t.Author,
+		t.Forum,
+		t.Message,
+		t.Slug,
+		t.Created,
+	).Scan(
+		&t.Id,
+		&t.Title,
+		&t.Author,
+		&t.Forum,
+		&t.Message,
+		&t.Slug,
+		&t.Created,
+		&t.Votes,
+	)
+
+	switch ErrorCode(err) {
+	case pgxOK:
+		return t, nil
+	case pgxErrUnique:
+		thread, _ := GetThreadBySlug(t.Slug)
+		return thread, ThreadIsExist
+	case pgxErrNotNull:
+		return models.Thread{}, UserNotFound
+	case pgxErrForeignKey:
+		return models.Thread{}, ForumNotFound
+	default:
+		return models.Thread{}, err
+	}
+}
+
 func GetThreadBySlug(param string) (models.Thread, error) {
 	if isNumber(param) {
 		id := param
@@ -39,7 +85,7 @@ func GetThreadBySlug(param string) (models.Thread, error) {
 		slug := param
 		var t models.Thread
 
-		err := DB.DBPool.QueryRow(`SELECT id, votes, created, slug, title, author, forum, message FROM threads WHERE LOWER(slug) = LOWER($1)`, slug).Scan(
+		err := DB.DBPool.QueryRow(`SELECT id, votes, created, slug, title, author, forum, message FROM threads WHERE slug = $1`, slug).Scan(
 			&t.Id,
 			&t.Votes,
 			&t.Created,
@@ -60,7 +106,7 @@ func GetThreadBySlug(param string) (models.Thread, error) {
 func UpdateThreadBySlugorId(param string, t models.Thread) (models.Thread, error) {
 	threadFound, err := GetThreadBySlug(param)
 	if err != nil {
-		return models.Thread{}, PostNotFound
+		return models.Thread{}, ThreadNotFound
 	}
 
 	updatedThread := models.Thread{}
@@ -116,7 +162,7 @@ func VoteForThread(param string, vote models.Vote) (models.Thread, error) {
 			&thread.Votes,
 		)
 	} else {
-		err = tx.QueryRow(`SELECT id, author, created, forum, message, slug, title, votes FROM threads WHERE LOWER(slug) = LOWER($1)`, param).Scan(
+		err = tx.QueryRow(`SELECT id, author, created, forum, message, slug, title, votes FROM threads WHERE slug = $1`, param).Scan(
 			&thread.Id,
 			&thread.Author,
 			&thread.Created,
@@ -128,7 +174,7 @@ func VoteForThread(param string, vote models.Vote) (models.Thread, error) {
 		)
 	}
 	if err != nil {
-		return models.Thread{}, ForumNotFound
+		return models.Thread{}, ThreadNotFound
 	}
 
 	var nick string
@@ -164,7 +210,7 @@ func VoteForThread(param string, vote models.Vote) (models.Thread, error) {
 func GetForumThreads(slug, limit, since string, desc bool) (models.Threads, error) {
 
 	queryString := " SELECT author, created, forum, id, message, slug, title, votes FROM threads t "
-	queryString += " where LOWER(forum) = LOWER('" + slug + "')"
+	queryString += " where forum = '" + slug + "'"
 
 	if since != "" && desc {
 		queryString += " AND t.created <= TIMESTAMPTZ '" + since + "' "
@@ -184,6 +230,7 @@ func GetForumThreads(slug, limit, since string, desc bool) (models.Threads, erro
 	var rows *pgx.Rows
 	var err error
 	rows, err = DB.DBPool.Query(queryString)
+	//fmt.Println(err)
 
 	if err != nil {
 		return models.Threads{}, err
@@ -206,42 +253,11 @@ func GetForumThreads(slug, limit, since string, desc bool) (models.Threads, erro
 		threads = append(threads, &t)
 	}
 
-	return threads, nil
-}
-
-func CreateForumThread(t models.Thread) (models.Thread, error) {
-	err := DB.DBPool.QueryRow(
-		`INSERT INTO threads (title, author, forum, message, slug, created) 
-		values ($1, (select nickname from users where LOWER(nickname) = LOWER($2)), 
-			(select slug from forums where LOWER(slug)=LOWER($3)), $4, $5, $6)
-		RETURNING id, title, author, forum, message, slug, created, votes
-		`,
-		t.Title,
-		t.Author,
-		t.Forum,
-		t.Message,
-		t.Slug,
-		t.Created,
-	).Scan(
-		&t.Id,
-		&t.Title,
-		&t.Author,
-		&t.Forum,
-		&t.Message,
-		&t.Slug,
-		&t.Created,
-		&t.Votes,
-	)
-
-	switch ErrorCode(err) {
-	case pgxOK:
-		return t, nil
-	case pgxErrUnique:
-		thread, _ := GetThreadBySlug(t.Slug)
-		return thread, ThreadIsExist
-	case pgxErrNotNull:
-		return models.Thread{}, UserNotFound
-	default:
-		return models.Thread{}, err
+	if len(threads) == 0 {
+		_, err := GetForumBySlug(slug)
+		if err != nil {
+			return models.Threads{}, ForumNotFound
+		}
 	}
+	return threads, nil
 }

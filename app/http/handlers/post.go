@@ -74,28 +74,15 @@ func PostsCreate(w http.ResponseWriter, r *http.Request) {
 
 	_ = p.UnmarshalJSON(body)
 
-	_, err := database.GetThreadBySlug(slug)
-
-	if err != nil {
-		WriteErrorResponse(w, http.StatusNotFound, "Can't find thread with slug "+slug)
-		return
-	}
-
-	if len(p) == 0 {
-		l := models.Threads{}
-		WriteResponse(w, http.StatusCreated, l)
-		return
-	}
-
-	_, err = database.GetUserInfo(p[0].Author)
-	if err != nil {
-		WriteErrorResponse(w, http.StatusNotFound, "Can't find user with nickname "+p[0].Author)
-		return
-	}
-
 	res, e := database.CreateThreadPost(&p, slug)
 	if e == database.ParentNotExist {
 		WriteErrorResponse(w, http.StatusConflict, e.Error())
+		return
+	} else if e == database.ThreadNotFound {
+		WriteErrorResponse(w, http.StatusNotFound, e.Error())
+		return
+	} else if e == database.UserNotFound {
+		WriteErrorResponse(w, http.StatusNotFound, e.Error())
 		return
 	} else if e != nil {
 		WriteErrorResponse(w, http.StatusInternalServerError, e.Error())

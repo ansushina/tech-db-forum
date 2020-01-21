@@ -18,7 +18,7 @@ func CreateForum(forum models.Forum) (models.Forum, error) {
 		`
 			INSERT INTO forums (slug, title, "user")
 			VALUES ($1, $2,  (
-				SELECT nickname FROM users WHERE LOWER(nickname) = LOWER($3)
+				SELECT nickname FROM users WHERE nickname = $3
 				))
 			RETURNING "user"
 		`,
@@ -45,7 +45,7 @@ func GetForumBySlug(slug string) (models.Forum, error) {
 	var f models.Forum
 	var p, t int
 
-	err := DB.DBPool.QueryRow(`SELECT slug, title, "user", posts, threads FROM forums WHERE LOWER(slug) = LOWER($1)`, slug).Scan(
+	err := DB.DBPool.QueryRow(`SELECT slug, title, "user", posts, threads FROM forums WHERE slug = $1`, slug).Scan(
 		&f.Slug,
 		&f.Title,
 		&f.User,
